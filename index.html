@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="tr" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Veta Timer - Özel Motor</title>
+    
+    <!-- Tailwind CSS (Arayüz şekillendirmesi için) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: 'var(--color-primary)',
+                        bgLight: '#f8fafc',
+                        bgDark: '#0f172a',
+                        surfaceLight: '#ffffff',
+                        surfaceDark: '#1e293b',
+                    },
+                    animation: {
+                        'spin-slow': 'spin 3s linear infinite',
+                        'bounce-slow': 'bounce 2s infinite',
+                        'pulse-fast': 'pulse 1s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- FontAwesome (İkonlar) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Roboto+Mono:wght@400;700&family=Pacifico&family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --color-primary: #3b82f6; /* Varsayılan Mavi */
+            --font-main: 'Inter', sans-serif;
+            --ring-progress: 0;
+        }
+
+        body {
+            font-family: var(--font-main);
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+        }
+
+        /* Özel Animasyon Sınıfları */
+        .anim-none { }
+        .anim-pulse { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+        .anim-float { animation: float 3s ease-in-out infinite; }
+        .anim-glow { box-shadow: 0 0 20px var(--color-primary); transition: box-shadow 0.3s ease; }
+        
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+
+        /* SVG Çember Progress Bar */
+        .progress-ring__circle {
+            transition: stroke-dashoffset 0.1s linear, stroke 0.3s ease;
+            transform: rotate(-90deg);
+            transform-origin: 50% 50%;
+            stroke: var(--color-primary);
+        }
+
+        /* Pürüzsüz geçişler */
+        .smooth-transition {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Scrollbar gizleme */
+        ::-webkit-scrollbar { display: none; }
+    </style>
+</head>
+<body class="bg-bgLight dark:bg-bgDark text-slate-800 dark:text-slate-100 h-screen w-full overflow-hidden smooth-transition flex justify-center items-center">
+
+    <!-- Ana Uygulama Konteyneri (Mobil ekran simülasyonu için max-w) -->
+    <div id="app" class="relative w-full h-full max-w-md bg-surfaceLight dark:bg-surfaceDark shadow-2xl flex flex-col overflow-hidden smooth-transition sm:rounded-3xl sm:h-[95vh] sm:border sm:border-slate-200 dark:sm:border-slate-700">
+        
+        <!-- Üst Bar -->
+        <header class="flex justify-between items-center p-6 pb-2 z-10">
+            <h1 class="text-2xl font-bold tracking-wider" id="app-title">KRONOMETRE</h1>
+            <button id="btn-settings" class="w-10 h-10 rounded-full flex justify-center items-center hover:bg-slate-200 dark:hover:bg-slate-700 smooth-transition text-xl">
+                <i class="fa-solid fa-gear"></i>
+            </button>
+        </header>
+
+        <!-- Sekmeler (Tabs) -->
+        <div class="flex px-6 pt-4 space-x-4 z-10">
+            <button class="tab-btn active flex-1 py-2 text-sm font-semibold border-b-2 border-primary text-primary smooth-transition" data-target="view-stopwatch">
+                <i class="fa-solid fa-stopwatch mr-2"></i>Kronometre
+            </button>
+            <button class="tab-btn flex-1 py-2 text-sm font-semibold border-b-2 border-transparent text-slate-400 dark:text-slate-500 hover:text-primary smooth-transition" data-target="view-pomodoro">
+                <i class="fa-solid fa-brain mr-2"></i>Pomodoro
+            </button>
+        </div>
+
+        <!-- İçerik Alanı -->
+        <main class="flex-1 relative overflow-hidden flex flex-col mt-4">
+            
+            <!-- Kronometre Görünümü -->
+            <div id="view-stopwatch" class="view-panel absolute inset-0 flex flex-col p-6 transition-opacity duration-300 opacity-100 z-10">
+                <!-- Sayaç Ekranı -->
+                <div class="flex-1 flex justify-center items-center flex-col relative">
+                    <div id="sw-display-container" class="rounded-full w-64 h-64 flex justify-center items-center flex-col relative smooth-transition border-4 border-slate-100 dark:border-slate-800">
+                        <span id="sw-time" class="text-5xl font-bold tracking-tighter">00:00.00</span>
+                        <span id="sw-ms" class="text-xl text-slate-500 mt-2">00</span>
+                    </div>
+                </div>
+
+                <!-- Tur Listesi (Lap) -->
+                <div class="h-1/3 overflow-y-auto mb-6 fade-mask relative rounded-xl bg-slate-50 dark:bg-slate-800/50 p-2">
+                    <ul id="sw-laps" class="space-y-2 text-sm">
+                        <!-- Turlar buraya JavaScript ile eklenecek -->
+                        <li class="text-center text-slate-400 mt-4 opacity-50">Turlar burada görünecek</li>
+                    </ul>
+                </div>
+
+                <!-- Kontroller -->
+                <div class="flex justify-around items-center h-24">
+                    <button id="sw-btn-lap-reset" class="w-16 h-16 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 font-semibold shadow-lg active:scale-95 smooth-transition">
+                        Tur
+                    </button>
+                    <button id="sw-btn-start-stop" class="w-20 h-20 rounded-full bg-primary/10 text-primary border-2 border-primary font-bold text-lg shadow-[0_0_15px_var(--color-primary)] active:scale-95 smooth-transition flex justify-center items-center">
+                        Başlat
+                    </button>
+                </div>
+            </div>
+
+            <!-- Pomodoro Görünümü -->
+            <div id="view-pomodoro" class="view-panel absolute inset-0 flex flex-col p-6 transition-opacity duration-300 opacity-0 pointer-events-none z-0">
+                
+                <!-- Durum Belirteci -->
+                <div class="text-center mt-2">
+                    <span id="pomo-mode-badge" class="px-4 py-1 rounded-full bg-primary/20 text-primary text-sm font-bold uppercase tracking-widest inline-flex items-center gap-2">
+                        <i class="fa-solid fa-briefcase"></i> Çalışma Zamanı
+                    </span>
+                </div>
+
+                <!-- Pomodoro Çemberi -->
+                <div class="flex-1 flex justify-center items-center relative">
+                    <div id="pomo-anim-container" class="relative w-72 h-72 flex justify-center items-center">
+                        <!-- SVG Çemberi -->
+                        <svg class="absolute inset-0 w-full h-full" viewBox="0 0 100 100">
+                            <circle class="text-slate-200 dark:text-slate-700 stroke-current" stroke-width="4" cx="50" cy="50" r="45" fill="transparent"></circle>
+                            <circle id="pomo-progress" class="progress-ring__circle" stroke-width="4" stroke-linecap="round" cx="50" cy="50" r="45" fill="transparent" stroke-dasharray="283" stroke-dashoffset="0"></circle>
+                        </svg>
+                        <div class="flex flex-col items-center z-10">
+                            <span id="pomo-time" class="text-6xl font-bold tracking-tighter">25:00</span>
+                            <span id="pomo-session-count" class="text-sm text-slate-500 mt-2 font-medium">Oturum: 0/4</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pomodoro Kontrolleri -->
+                <div class="flex justify-around items-center h-24 mt-auto">
+                    <button id="pomo-btn-reset" class="w-14 h-14 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 shadow-lg active:scale-95 smooth-transition">
+                        <i class="fa-solid fa-rotate-right"></i>
+                    </button>
+                    <button id="pomo-btn-start-stop" class="w-20 h-20 rounded-full bg-primary text-white font-bold text-xl shadow-lg shadow-primary/50 active:scale-95 smooth-transition flex justify-center items-center">
+                        <i class="fa-solid fa-play"></i>
+                    </button>
+                    <button id="pomo-btn-skip" class="w-14 h-14 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 shadow-lg active:scale-95 smooth-transition">
+                        <i class="fa-solid fa-forward-step"></i>
+                    </button>
+                </div>
+            </div>
+        </main>
+
+        <!-- Ayarlar Modalı -->
+        <div id="modal-settings" class="absolute inset-0 bg-surfaceLight/95 dark:bg-surfaceDark/95 backdrop-blur-md z-50 transform translate-y-full transition-transform duration-500 flex flex-col">
+            <div class="flex justify-between items-center p-6 border-b border-slate-200 dark:border-slate-700">
+                <h2 class="text-xl font-bold"><i class="fa-solid fa-sliders mr-2"></i> Görünüm & Ayarlar</h2>
+                <button id="btn-close-settings" class="text-2xl text-slate-500 hover:text-slate-800 dark:hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            
+            <div class="flex-1 overflow-y-auto p-6 space-y-8">
+                
+                <!-- Tema -->
+                <div>
+                    <h3 class="text-sm font-semibold text-slate-400 mb-3 uppercase tracking-wider">Tema</h3>
+                    <div class="flex space-x-4 bg-slate-100 dark:bg-slate-800 p-2 rounded-xl">
+                        <button class="setting-theme flex-1 py-2 rounded-lg bg-white dark:bg-slate-700 shadow-sm font-medium smooth-transition" data-val="light"><i class="fa-regular fa-sun mr-2"></i>Açık</button>
+                        <button class="setting-theme flex-1 py-2 rounded-lg text-slate-500 dark:text-white hover:bg-slate-200 dark:hover:bg-slate-700 smooth-transition" data-val="dark"><i class="fa-regular fa-moon mr-2"></i>Koyu</button>
+                    </div>
+                </div>
+
+                <!-- Renk Kombinasyonları -->
+                <div>
+                    <h3 class="text-sm font-semibold text-slate-400 mb-3 uppercase tracking-wider">Vurgu Rengi</h3>
+                    <div class="flex justify-between" id="color-picker">
+                        <button class="w-10 h-10 rounded-full bg-[#3b82f6] border-2 border-slate-300 dark:border-slate-600 scale-110 setting-color" data-color="#3b82f6"></button>
+                        <button class="w-10 h-10 rounded-full bg-[#ef4444] border-2 border-transparent hover:scale-110 setting-color smooth-transition" data-color="#ef4444"></button>
+                        <button class="w-10 h-10 rounded-full bg-[#10b981] border-2 border-transparent hover:scale-110 setting-color smooth-transition" data-color="#10b981"></button>
+                        <button class="w-10 h-10 rounded-full bg-[#f59e0b] border-2 border-transparent hover:scale-110 setting-color smooth-transition" data-color="#f59e0b"></button>
+                        <button class="w-10 h-10 rounded-full bg-[#8b5cf6] border-2 border-transparent hover:scale-110 setting-color smooth-transition" data-color="#8b5cf6"></button>
+                        <button class="w-10 h-10 rounded-full bg-[#ec4899] border-2 border-transparent hover:scale-110 setting-color smooth-transition" data-color="#ec4899"></button>
+                    </div>
+                </div>
+
+                <!-- Yazı Fontu -->
+                <div>
+                    <h3 class="text-sm font-semibold text-slate-400 mb-3 uppercase tracking-wider">Yazı Tipi</h3>
+                    <div class="grid grid-cols-2 gap-3">
+                        <button class="setting-font p-3 border border-slate-200 dark:border-slate-700 rounded-xl text-center bg-primary/10 border-primary font-['Inter'] smooth-transition" data-font="'Inter', sans-serif">Modern</button>
+                        <button class="setting-font p-3 border border-slate-200 dark:border-slate-700 rounded-xl text-center hover:bg-slate-50 dark:hover:bg-slate-800 font-['Roboto_Mono'] smooth-transition" data-font="'Roboto Mono', monospace">Dijital</button>
+                        <button class="setting-font p-3 border border-slate-200 dark:border-slate-700 rounded-xl text-center hover:bg-slate-50 dark:hover:bg-slate-800 font-['Playfair_Display'] smooth-transition" data-font="'Playfair Display', serif">Klasik</button>
+                        <button class="setting-font p-3 border border-slate-200 dark:border-slate-700 rounded-xl text-center hover:bg-slate-50 dark:hover:bg-slate-800 font-['Pacifico'] smooth-transition" data-font="'Pacifico', cursive">Eğlenceli</button>
+                    </div>
+                </div>
+
+                <!-- Animasyon Çeşidi -->
+                <div>
+                    <h3 class="text-sm font-semibold text-slate-400 mb-3 uppercase tracking-wider">Sayaç Animasyonu</h3>
+                    <select id="setting-animation" class="w-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-3 outline-none focus:border-primary smooth-transition">
+                        <option value="anim-none">Animasyon Yok</option>
+                        <option value="anim-pulse">Kalp Atışı (Pulse)</option>
+                        <option value="anim-float">Havada Süzülme (Float)</option>
+                        <option value="anim-glow">Parlayan Işık (Glow)</option>
+                    </select>
+                </div>
+                
+                <!-- Pomodoro Süre Ayarları -->
+                <div>
+                     <h3 class="text-sm font-semibold text-slate-400 mb-3 uppercase tracking-wider">Pomodoro Süreleri (Dk)</h3>
+                     <div class="flex gap-4">
+                         <div class="flex-1">
+                             <label class="text-xs text-slate-500 block mb-1">Çalışma</label>
+                             <input type="number" id="setting-pomo-work" value="25" min="1" max="60" class="w-full bg-slate-100 dark:bg-slate-800 rounded-lg p-2 text-center outline-none focus:ring-2 focus:ring-primary">
+                         </div>
+                         <div class="flex-1">
+                             <label class="text-xs text-slate-500 block mb-1">Kısa Mola</label>
+                             <input type="number" id="setting-pomo-break" value="5" min="1" max="30" class="w-full bg-slate-100 dark:bg-slate-800 rounded-lg p-2 text-center outline-none focus:ring-2 focus:ring-primary">
+                         </div>
+                     </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Bildirim Kutusu (Alert yerine) -->
+        <div id="toast-container" class="absolute top-4 left-1/2 transform -translate-x-1/2 bg-slate-800 text-white px-4 py-2 rounded-full shadow-lg opacity-0 pointer-events-none transition-opacity duration-300 z-[60] flex items-center gap-2">
+            <i class="fa-solid fa-circle-info text-primary"></i> <span id="toast-msg" class="text-sm font-medium">Mesaj</span>
+        </div>
+    </div>
+
+    <script>
+        /**
+         * Veta Engine v1.0
+         * Çapraz platform çalışabilen, hafif, durum tabanlı (state-driven) özel UI & Timer Motoru.
+         * Framework bağımlılığı olmadan native hissiyatı vermek üzere tasarlanmıştır.
+         */
+
+        class VetaEngine {
+            constructor() {
+                // Global Durum (State) Yönetimi
+                this.state = {
+                    theme: 'dark',
+                    color: '#3b82f6',
+                    font: "'Inter', sans-serif",
+                    animation: 'anim-none',
+                    activeTab: 'stopwatch',
+                    pomoWorkTime: 25,
+                    pomoBreakTime: 5
+                };
+
+                // Alt motorları başlat
+                this.ui = new UIManager(this.state);
+                this.stopwatch = new StopwatchController(this.ui);
+                this.pomodoro = new PomodoroController(this.ui, this.state);
+                
+                this.initEvents();
+                this.ui.applyState();
+            }
+
+            initEvents() {
+                // Sekme Geçişleri
+                document.querySelectorAll('.tab-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const target = e.currentTarget.getAttribute('data-target');
+                        this.ui.switchTab(target, e.currentTarget);
+                        
+                        // Başlık güncelleme
+                        const titleEl = document.getElementById('app-title');
+                        titleEl.innerText = target === 'view-stopwatch' ? 'KRONOMETRE' : 'POMODORO';
+                    });
+                });
+
+                // Ayarlar Modalı
+                document.getElementById('btn-settings').addEventListener('click', () => this.ui.toggleModal(true));
+                document.getElementById('btn-close-settings').addEventListener('click', () => this.ui.toggleModal(false));
+
+                // Tema Seçimi
+                document.querySelectorAll('.setting-theme').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        this.state.theme = e.currentTarget.getAttribute('data-val');
+                        this.ui.updateThemeUI();
+                    });
+                });
+
+                // Renk Seçimi
+                document.querySelectorAll('.setting-color').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        this.state.color = e.currentTarget.getAttribute('data-color');
+                        this.ui.updateColorUI();
+                    });
+                });
+
+                // Font Seçimi
+                document.querySelectorAll('.setting-font').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        this.state.font = e.currentTarget.getAttribute('data-font');
+                        this.ui.updateFontUI(e.currentTarget);
+                    });
+                });
+
+                // Animasyon Seçimi
+                document.getElementById('setting-animation').addEventListener('change', (e) => {
+                    this.state.animation = e.target.value;
+                    this.ui.updateAnimationUI();
+                });
+
+                // Pomodoro Ayar Değişiklikleri
+                document.getElementById('setting-pomo-work').addEventListener('change', (e) => {
+                    this.state.pomoWorkTime = parseInt(e.target.value) || 25;
+                    this.pomodoro.reset();
+                });
+                document.getElementById('setting-pomo-break').addEventListener('change', (e) => {
+                    this.state.pomoBreakTime = parseInt(e.target.value) || 5;
+                    this.pomodoro.reset();
+                });
+            }
+        }
+
+        class UIManager {
+            constructor(state) {
+                this.state = state;
+                this.toastTimeout = null;
+            }
+
+            applyState() {
+                this.updateThemeUI();
+                this.updateColorUI();
+                
+                // İlk font butonunu seçili yap
+                const fontBtn = document.querySelector(`[data-font="${this.state.font}"]`);
+                if(fontBtn) this.updateFontUI(fontBtn);
+                
+                document.getElementById('setting-animation').value = this.state.animation;
+                this.updateAnimationUI();
+            }
+
+            switchTab(targetId, btnElement) {
+                // Buton stilleri
+                document.querySelectorAll('.tab-btn').forEach(btn => {
+                    btn.classList.remove('border-primary', 'text-primary', 'active');
+                    btn.classList.add('border-transparent', 'text-slate-400', 'dark:text-slate-500');
+                });
+                btnElement.classList.remove('border-transparent', 'text-slate-400', 'dark:text-slate-500');
+                btnElement.classList.add('border-primary', 'text-primary', 'active');
+
+                // Görünüm (View) geçişi
+                document.querySelectorAll('.view-panel').forEach(panel => {
+                    if(panel.id === targetId) {
+                        panel.classList.remove('opacity-0', 'pointer-events-none', 'z-0');
+                        panel.classList.add('opacity-100', 'z-10');
+                    } else {
+                        panel.classList.remove('opacity-100', 'z-10');
+                        panel.classList.add('opacity-0', 'pointer-events-none', 'z-0');
+                    }
+                });
+            }
+
+            toggleModal(show) {
+                const modal = document.getElementById('modal-settings');
+                if(show) {
+                    modal.classList.remove('translate-y-full');
+                } else {
+                    modal.classList.add('translate-y-full');
+                }
+            }
+
+            updateThemeUI() {
+                const html = document.documentElement;
+                if (this.state.theme === 'dark') {
+                    html.classList.add('dark');
+                } else {
+                    html.classList.remove('dark');
+                }
+
+                // Buton aktiflik durumu
+                document.querySelectorAll('.setting-theme').forEach(btn => {
+                    if (btn.getAttribute('data-val') === this.state.theme) {
+                        btn.classList.add('bg-white', 'shadow-sm', 'text-slate-800');
+                        btn.classList.remove('text-slate-500', 'dark:text-white', 'bg-slate-700');
+                        if(this.state.theme === 'dark') {
+                           btn.classList.add('bg-slate-700', 'text-white');
+                           btn.classList.remove('bg-white','text-slate-800');
+                        }
+                    } else {
+                        btn.classList.remove('bg-white', 'shadow-sm', 'bg-slate-700');
+                        btn.classList.add('text-slate-500', 'dark:text-white', 'hover:bg-slate-200', 'dark:hover:bg-slate-700');
+                    }
+                });
+            }
+
+            updateColorUI() {
+                document.documentElement.style.setProperty('--color-primary', this.state.color);
+                
+                // Color picker buton stilleri
+                document.querySelectorAll('.setting-color').forEach(btn => {
+                    if (btn.getAttribute('data-color') === this.state.color) {
+                        btn.classList.add('border-slate-300', 'dark:border-slate-600', 'scale-110');
+                        btn.classList.remove('border-transparent');
+                    } else {
+                        btn.classList.remove('border-slate-300', 'dark:border-slate-600', 'scale-110');
+                        btn.classList.add('border-transparent');
+                    }
+                });
+            }
+
+            updateFontUI(activeBtn) {
+                document.documentElement.style.setProperty('--font-main', this.state.font);
+                
+                document.querySelectorAll('.setting-font').forEach(btn => {
+                    btn.classList.remove('bg-primary/10', 'border-primary');
+                    btn.classList.add('border-slate-200', 'dark:border-slate-700');
+                });
+                activeBtn.classList.add('bg-primary/10', 'border-primary');
+                activeBtn.classList.remove('border-slate-200', 'dark:border-slate-700');
+            }
+
+            updateAnimationUI() {
+                const swContainer = document.getElementById('sw-display-container');
+                const pomoContainer = document.getElementById('pomo-anim-container');
+                
+                // Önceki animasyonları temizle
+                swContainer.className = swContainer.className.replace(/anim-\w+/g, '').trim();
+                pomoContainer.className = pomoContainer.className.replace(/anim-\w+/g, '').trim();
+                
+                // Yeni animasyon ekle (Sadece sayaç çalışıyorken aktifleşecek mantığı eklenebilir, şimdilik statik atıyoruz)
+                swContainer.classList.add(this.state.animation);
+                pomoContainer.classList.add(this.state.animation);
+            }
+
+            showToast(msg) {
+                const toast = document.getElementById('toast-container');
+                document.getElementById('toast-msg').innerText = msg;
+                toast.classList.remove('opacity-0');
+                
+                if(this.toastTimeout) clearTimeout(this.toastTimeout);
+                
+                this.toastTimeout = setTimeout(() => {
+                    toast.classList.add('opacity-0');
+                }, 3000);
+            }
+        }
+
+        class StopwatchController {
+            constructor(ui) {
+                this.ui = ui;
+                this.isRunning = false;
+                this.startTime = 0;
+                this.elapsedTime = 0;
+                this.lapCounter = 1;
+                this.timerId = null;
+
+                // DOM Elementleri
+                this.elTime = document.getElementById('sw-time');
+                this.elMs = document.getElementById('sw-ms');
+                this.elLaps = document.getElementById('sw-laps');
+                this.btnStartStop = document.getElementById('sw-btn-start-stop');
+                this.btnLapReset = document.getElementById('sw-btn-lap-reset');
+
+                this.bindEvents();
+            }
+
+            bindEvents() {
+                this.btnStartStop.addEventListener('click', () => {
+                    if (this.isRunning) this.stop();
+                    else this.start();
+                });
+
+                this.btnLapReset.addEventListener('click', () => {
+                    if (this.isRunning) this.lap();
+                    else this.reset();
+                });
+            }
+
+            start() {
+                if(this.isRunning) return;
+                this.isRunning = true;
+                this.startTime = performance.now() - this.elapsedTime;
+                
+                this.btnStartStop.innerHTML = 'Durdur';
+                this.btnStartStop.classList.remove('bg-primary/10', 'text-primary', 'shadow-[0_0_15px_var(--color-primary)]');
+                this.btnStartStop.classList.add('bg-red-500/10', 'text-red-500', 'border-red-500', 'shadow-[0_0_15px_rgba(239,68,68,0.5)]');
+
+                this.btnLapReset.innerText = 'Tur';
+                
+                // Hassas render döngüsü
+                const loop = () => {
+                    if(!this.isRunning) return;
+                    this.elapsedTime = performance.now() - this.startTime;
+                    this.updateDisplay(this.elapsedTime);
+                    this.timerId = requestAnimationFrame(loop);
+                };
+                this.timerId = requestAnimationFrame(loop);
+            }
+
+            stop() {
+                this.isRunning = false;
+                cancelAnimationFrame(this.timerId);
+                
+                this.btnStartStop.innerHTML = 'Başlat';
+                this.btnStartStop.classList.remove('bg-red-500/10', 'text-red-500', 'border-red-500', 'shadow-[0_0_15px_rgba(239,68,68,0.5)]');
+                this.btnStartStop.classList.add('bg-primary/10', 'text-primary', 'border-primary', 'shadow-[0_0_15px_var(--color-primary)]');
+
+                this.btnLapReset.innerText = 'Sıfırla';
+            }
+
+            reset() {
+                this.stop();
+                this.elapsedTime = 0;
+                this.updateDisplay(0);
+                this.elLaps.innerHTML = '<li class="text-center text-slate-400 mt-4 opacity-50">Turlar burada görünecek</li>';
+                this.lapCounter = 1;
+                this.btnLapReset.innerText = 'Tur';
+                this.ui.showToast("Kronometre sıfırlandı");
+            }
+
+            lap() {
+                if(!this.isRunning) return;
+                
+                if(this.lapCounter === 1) {
+                    this.elLaps.innerHTML = ''; // Placeholder'ı sil
+                }
+
+                const { m, s, ms } = this.formatTime(this.elapsedTime);
+                const lapStr = `${m}:${s}.${ms}`;
+                
+                const li = document.createElement('li');
+                li.className = "flex justify-between items-center py-2 px-3 border-b border-slate-200 dark:border-slate-700/50 smooth-transition";
+                li.innerHTML = `<span class="font-bold text-slate-500">Tur ${this.lapCounter}</span> <span class="font-mono font-bold text-lg">${lapStr}</span>`;
+                
+                this.elLaps.prepend(li);
+                this.lapCounter++;
+            }
+
+            formatTime(timeInMs) {
+                const totalSeconds = Math.floor(timeInMs / 1000);
+                const minutes = Math.floor(totalSeconds / 60);
+                const seconds = totalSeconds % 60;
+                const ms = Math.floor((timeInMs % 1000) / 10);
+
+                return {
+                    m: minutes.toString().padStart(2, '0'),
+                    s: seconds.toString().padStart(2, '0'),
+                    ms: ms.toString().padStart(2, '0')
+                };
+            }
+
+            updateDisplay(timeInMs) {
+                const { m, s, ms } = this.formatTime(timeInMs);
+                this.elTime.innerText = `${m}:${s}`;
+                this.elMs.innerText = `.${ms}`;
+            }
+        }
+
+        class PomodoroController {
+            constructor(ui, globalState) {
+                this.ui = ui;
+                this.state = globalState;
+                this.isRunning = false;
+                this.mode = 'work'; // 'work' veya 'break'
+                this.timeLeft = this.state.pomoWorkTime * 60;
+                this.sessionCount = 0;
+                this.totalSessions = 4;
+                this.timerId = null;
+
+                // DOM Elements
+                this.elTime = document.getElementById('pomo-time');
+                this.elProgress = document.getElementById('pomo-progress');
+                this.elBadge = document.getElementById('pomo-mode-badge');
+                this.elSession = document.getElementById('pomo-session-count');
+                this.btnStartStop = document.getElementById('pomo-btn-start-stop');
+                this.btnReset = document.getElementById('pomo-btn-reset');
+                this.btnSkip = document.getElementById('pomo-btn-skip');
+
+                // SVG Daire çevresi hesaplama
+                this.circumference = 2 * Math.PI * 45; // r=45
+                this.elProgress.style.strokeDasharray = this.circumference;
+
+                this.bindEvents();
+                this.updateDisplay();
+            }
+
+            bindEvents() {
+                this.btnStartStop.addEventListener('click', () => {
+                    if (this.isRunning) this.pause();
+                    else this.start();
+                });
+                this.btnReset.addEventListener('click', () => this.reset());
+                this.btnSkip.addEventListener('click', () => this.skipMode());
+            }
+
+            start() {
+                if (this.isRunning) return;
+                this.isRunning = true;
+                this.btnStartStop.innerHTML = '<i class="fa-solid fa-pause"></i>';
+                
+                // CSS Animasyonunu ekle
+                const container = document.getElementById('pomo-anim-container');
+                container.style.animationPlayState = 'running';
+
+                this.lastTime = performance.now();
+                
+                const loop = (currentTime) => {
+                    if(!this.isRunning) return;
+                    
+                    const delta = (currentTime - this.lastTime) / 1000;
+                    this.lastTime = currentTime;
+                    
+                    this.timeLeft -= delta;
+
+                    if(this.timeLeft <= 0) {
+                        this.timeLeft = 0;
+                        this.updateDisplay();
+                        this.completeSession();
+                        return;
+                    }
+
+                    this.updateDisplay();
+                    this.timerId = requestAnimationFrame(loop);
+                };
+                
+                this.timerId = requestAnimationFrame(loop);
+            }
+
+            pause() {
+                this.isRunning = false;
+                cancelAnimationFrame(this.timerId);
+                this.btnStartStop.innerHTML = '<i class="fa-solid fa-play"></i>';
+                
+                // CSS Animasyonunu duraklat
+                const container = document.getElementById('pomo-anim-container');
+                container.style.animationPlayState = 'paused';
+            }
+
+            reset() {
+                this.pause();
+                this.timeLeft = this.mode === 'work' ? this.state.pomoWorkTime * 60 : this.state.pomoBreakTime * 60;
+                this.updateDisplay();
+                this.ui.showToast("Pomodoro sayacı sıfırlandı");
+            }
+
+            skipMode() {
+                this.switchMode(this.mode === 'work' ? 'break' : 'work');
+                this.ui.showToast(this.mode === 'work' ? "Çalışma zamanı!" : "Mola zamanı!");
+            }
+
+            completeSession() {
+                this.pause();
+                if(this.mode === 'work') {
+                    this.sessionCount++;
+                    if(this.sessionCount >= this.totalSessions) {
+                        this.ui.showToast("Tebrikler! Uzun mola hak ettin.");
+                        this.sessionCount = 0;
+                        // Uzun mola mantığı eklenebilir, şu an kısaya dönüyor
+                    } else {
+                        this.ui.showToast("Oturum bitti! Mola zamanı.");
+                    }
+                    this.switchMode('break');
+                } else {
+                    this.ui.showToast("Mola bitti! Çalışma zamanı.");
+                    this.switchMode('work');
+                }
+                
+                // Otomatik başlat (opsiyonel eklenebilir, şu an beklemede kalıyor)
+            }
+
+            switchMode(newMode) {
+                this.mode = newMode;
+                this.timeLeft = this.mode === 'work' ? this.state.pomoWorkTime * 60 : this.state.pomoBreakTime * 60;
+                
+                if (this.mode === 'work') {
+                    this.elBadge.innerHTML = '<i class="fa-solid fa-briefcase"></i> Çalışma Zamanı';
+                    this.elBadge.classList.replace('text-green-500', 'text-primary');
+                    this.elBadge.classList.replace('bg-green-500/20', 'bg-primary/20');
+                    document.documentElement.style.setProperty('--color-primary', this.state.color);
+                } else {
+                    this.elBadge.innerHTML = '<i class="fa-solid fa-mug-hot"></i> Mola Zamanı';
+                    this.elBadge.classList.replace('text-primary', 'text-green-500');
+                    this.elBadge.classList.replace('bg-primary/20', 'bg-green-500/20');
+                    document.documentElement.style.setProperty('--color-primary', '#10b981'); // Mola için yeşil ton
+                }
+                
+                this.updateDisplay();
+            }
+
+            updateDisplay() {
+                // Saniye ve dakika formatlama
+                const totalSeconds = Math.ceil(this.timeLeft);
+                const minutes = Math.floor(totalSeconds / 60);
+                const seconds = totalSeconds % 60;
+                
+                this.elTime.innerText = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                this.elSession.innerText = `Oturum: ${this.sessionCount}/${this.totalSessions}`;
+
+                // Çember ilerlemesini hesapla (Stroke Dash Offset)
+                const totalDuration = this.mode === 'work' ? this.state.pomoWorkTime * 60 : this.state.pomoBreakTime * 60;
+                const fraction = this.timeLeft / totalDuration;
+                const offset = this.circumference - (fraction * this.circumference);
+                this.elProgress.style.strokeDashoffset = offset;
+            }
+        }
+
+        // DOM yüklendiğinde motoru ateşle
+        document.addEventListener('DOMContentLoaded', () => {
+            window.AppEngine = new VetaEngine();
+        });
+
+    </script>
+</body>
+                          </html>
