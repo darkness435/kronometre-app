@@ -7,22 +7,21 @@
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#121212">
     <!-- Genişletilmiş Font Kütüphanesi -->
-    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@500;700&family=Press+Start+2P&family=Rajdhani:wght@500;700&family=Caveat:wght@600&family=Roboto:wght@300;400&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@500;700&family=Press+Start+2P&family=Rajdhani:wght@500;700&family=Caveat:wght@600&family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
     
     <style>
-        /* [Veta Engine CSS] - Gelişmiş Stil Motoru */
+        /* --- Veta Engine CSS --- */
         :root {
             --bg-color: #0d0d12;
             --surface-color: #1a1a24;
             --text-color: #ffffff;
             --text-muted: #888899;
-            --primary-color: #00e5ff; /* Varsayılan: Turkuaz */
+            --primary-color: #00e5ff;
             --ring-bg: #2a2a35;
-            
-            --font-family: 'Share Tech Mono', monospace; /* Varsayılan Font */
+            --font-family: 'Share Tech Mono', monospace;
         }
 
-        /* Light Theme Değişkenleri */
+        /* Açık Tema Değişkenleri */
         body.light-mode {
             --bg-color: #f0f2f5;
             --surface-color: #ffffff;
@@ -50,35 +49,68 @@
             transition: background-color 0.4s ease, color 0.4s ease;
         }
 
-        /* Üst Menü / Mod Seçimi */
+        /* --- Üst Menü --- */
         .top-bar {
             display: flex;
-            justify-content: center;
-            gap: 15px;
+            align-items: center;
+            justify-content: space-between;
             padding: 20px;
-            background: linear-gradient(180deg, rgba(0,0,0,0.3) 0%, transparent 100%);
+            background: transparent;
+            z-index: 10;
+        }
+
+        .settings-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            padding: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: color 0.3s, transform 0.3s;
+        }
+
+        .settings-btn:active {
+            transform: rotate(45deg);
+        }
+
+        .settings-btn svg {
+            width: 28px;
+            height: 28px;
+            fill: currentColor;
+        }
+
+        .mode-selector {
+            display: flex;
+            gap: 10px;
         }
 
         .mode-btn {
             background: transparent;
-            border: 2px solid var(--text-muted);
+            border: 2px solid transparent;
             color: var(--text-muted);
-            padding: 8px 20px;
+            padding: 6px 16px;
             border-radius: 20px;
             font-size: 14px;
             font-family: 'Roboto', sans-serif;
-            font-weight: bold;
+            font-weight: 500;
             cursor: pointer;
             transition: all 0.3s ease;
         }
 
         .mode-btn.active {
-            border-color: var(--primary-color);
+            background: var(--surface-color);
             color: var(--primary-color);
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
         }
 
-        /* Ana Gösterge Alanı */
+        /* Üst barı dengelemek için boş div */
+        .spacer {
+            width: 38px; 
+        }
+
+        /* --- Ana Gösterge Alanı --- */
         .display-container {
             flex: 1;
             display: flex;
@@ -86,10 +118,9 @@
             align-items: center;
             justify-content: center;
             position: relative;
+            min-height: 350px;
         }
 
-        /* Görünüm Modları (Layouts) */
-        /* 1. Klasik Mod */
         .timer-circle {
             position: relative;
             width: 280px;
@@ -121,60 +152,49 @@
             stroke: var(--primary-color);
             stroke-width: 8;
             stroke-linecap: round;
-            stroke-dasharray: 816; /* 2 * PI * r (r=130) */
+            stroke-dasharray: 816;
             stroke-dashoffset: 816;
             transition: stroke 0.4s ease;
         }
 
-        /* Minimal Görünüm: Halkayı gizle */
+        /* Layout (Görünüm) Modları */
         body.layout-minimal .timer-bg, 
         body.layout-minimal .timer-progress {
             display: none;
         }
 
-        /* Dashboard Görünümü */
         body.layout-dashboard .timer-circle {
             width: 320px;
             height: 150px;
         }
         body.layout-dashboard .timer-bg, 
         body.layout-dashboard .timer-progress {
-            display: none; /* Daire yerine yatay tasarım yapılabilir, şimdilik gizli */
+            display: none;
         }
         body.layout-dashboard .time-display {
-            font-size: 4rem;
+            font-size: 3.5rem;
             background: var(--surface-color);
             padding: 20px 40px;
             border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
             border-left: 5px solid var(--primary-color);
         }
 
-        /* Zaman Metni */
         .time-display {
             font-size: 3.5rem;
             font-weight: normal;
             letter-spacing: 2px;
             z-index: 10;
-            text-shadow: 0 0 20px rgba(0,0,0,0.3);
+            text-shadow: 0 0 20px rgba(0,0,0,0.2);
             transition: all 0.4s ease;
         }
-        
-        .ms-display {
-            font-size: 1.2rem;
-            color: var(--text-muted);
-            position: absolute;
-            bottom: 60px;
-            z-index: 10;
-        }
 
-        /* Kontrol Butonları */
+        /* --- Kontrol Butonları --- */
         .controls {
             display: flex;
             justify-content: center;
             gap: 20px;
-            padding: 30px;
-            margin-bottom: 20px;
+            padding: 10px 30px 30px 30px;
         }
 
         .ctrl-btn {
@@ -191,150 +211,174 @@
             transition: transform 0.1s, filter 0.3s;
         }
 
-        .ctrl-btn:active {
-            transform: scale(0.92);
-        }
+        .ctrl-btn:active { transform: scale(0.92); }
+        .btn-start { background-color: rgba(46, 213, 115, 0.9); }
+        .btn-stop { background-color: rgba(255, 71, 87, 0.9); }
+        .btn-lap { background-color: rgba(116, 125, 140, 0.9); }
+        .btn-reset { background-color: rgba(255, 165, 2, 0.9); }
 
-        .btn-start { background-color: rgba(46, 213, 115, 0.8); }
-        .btn-stop { background-color: rgba(255, 71, 87, 0.8); }
-        .btn-lap { background-color: rgba(116, 125, 140, 0.8); }
-        .btn-reset { background-color: rgba(255, 165, 2, 0.8); }
-
-        /* Ayarlar ve Tur (Lap) Paneli Bölümü */
-        .bottom-panels {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-            background: var(--surface-color);
-            border-top-left-radius: 30px;
-            border-top-right-radius: 30px;
-            box-shadow: 0 -5px 20px rgba(0,0,0,0.1);
-            transition: background 0.4s ease;
-        }
-
-        .panel-tabs {
-            display: flex;
-            background: rgba(0,0,0,0.1);
-        }
-
-        .tab-btn {
-            flex: 1;
-            padding: 15px;
-            background: none;
-            border: none;
-            color: var(--text-muted);
-            font-family: 'Roboto', sans-serif;
-            font-weight: bold;
-            border-bottom: 3px solid transparent;
-            transition: all 0.3s;
-        }
-
-        .tab-btn.active {
-            color: var(--primary-color);
-            border-bottom-color: var(--primary-color);
-        }
-
-        .panel-content {
+        /* --- Turlar (Laps) Listesi --- */
+        .laps-container {
             flex: 1;
             overflow-y: auto;
-            padding: 20px;
-            display: none;
+            padding: 0 30px 30px 30px;
+            max-height: 35vh;
         }
+        
+        .laps-container::-webkit-scrollbar { display: none; }
 
-        .panel-content.active {
-            display: block;
-        }
-
-        /* Laps Listesi */
-        .lap-list {
-            list-style: none;
-        }
+        .lap-list { list-style: none; }
         .lap-item {
             display: flex;
             justify-content: space-between;
-            padding: 12px 0;
+            padding: 15px 0;
             border-bottom: 1px solid var(--ring-bg);
             font-family: var(--font-family);
-            font-size: 1.1rem;
+            font-size: 1.2rem;
+            animation: fadeIn 0.3s ease;
         }
 
-        /* Ayarlar Menüsü */
-        .setting-group {
-            margin-bottom: 25px;
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
+
+        /* --- Ayarlar Modalı (Açılır Menü) --- */
+        .settings-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+            z-index: 100;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.4s ease;
+        }
+
+        .settings-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .settings-panel {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 80vh;
+            background: var(--surface-color);
+            border-top-left-radius: 30px;
+            border-top-right-radius: 30px;
+            padding: 25px 25px 50px 25px;
+            transform: translateY(100%);
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 -10px 40px rgba(0,0,0,0.3);
+        }
+
+        .settings-overlay.active .settings-panel {
+            transform: translateY(0);
+        }
+
+        .settings-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--ring-bg);
+        }
+
+        .settings-header h2 {
+            font-family: 'Roboto', sans-serif;
+            font-size: 1.2rem;
+            color: var(--text-color);
+        }
+
+        .close-btn {
+            background: var(--ring-bg);
+            border: none;
+            color: var(--text-color);
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .settings-content {
+            overflow-y: auto;
+            flex: 1;
+            padding-right: 5px;
+        }
+        .settings-content::-webkit-scrollbar { display: none; }
+
+        .setting-group { margin-bottom: 25px; }
         .setting-title {
             font-family: 'Roboto', sans-serif;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             color: var(--text-muted);
-            margin-bottom: 10px;
+            margin-bottom: 12px;
             text-transform: uppercase;
             letter-spacing: 1px;
         }
 
         .options-row {
             display: flex;
-            gap: 10px;
+            gap: 12px;
             overflow-x: auto;
             padding-bottom: 5px;
         }
-        
         .options-row::-webkit-scrollbar { display: none; }
 
         .opt-btn {
             background: var(--bg-color);
-            border: 1px solid var(--ring-bg);
+            border: 2px solid transparent;
             color: var(--text-color);
-            padding: 8px 16px;
-            border-radius: 8px;
+            padding: 10px 18px;
+            border-radius: 12px;
             white-space: nowrap;
             font-family: 'Roboto', sans-serif;
+            font-weight: 500;
             transition: all 0.2s;
         }
 
         .opt-btn.active {
             border-color: var(--primary-color);
-            background: rgba(0,0,0,0.1);
+            color: var(--primary-color);
+            background: rgba(0,0,0,0.2);
         }
 
-        /* Renk Seçiciler */
         .color-circle {
-            width: 30px;
-            height: 30px;
+            width: 35px;
+            height: 35px;
             border-radius: 50%;
             cursor: pointer;
             border: 2px solid transparent;
             flex-shrink: 0;
+            transition: transform 0.2s;
         }
         .color-circle.active {
             border-color: var(--text-color);
-            transform: scale(1.1);
+            transform: scale(1.15);
         }
 
         /* Animasyon Efektleri */
-        /* Nabız (Pulse) Animasyonu */
         @keyframes pulse {
             0% { transform: scale(1); }
             50% { transform: scale(1.05); }
             100% { transform: scale(1); }
         }
-        body.anim-pulse .timer-circle {
-            animation: pulse 1s infinite ease-in-out;
-        }
-
-        /* Animasyon Kapalıysa Progress geçişini kapat */
-        body.anim-none .timer-progress {
-            transition: none;
-        }
-        
-        body.anim-smooth .timer-progress {
-            transition: stroke-dashoffset 0.1s linear;
-        }
-        
-        body.anim-tick .timer-progress {
-            transition: stroke-dashoffset 0.2s steps(1); /* Saniye saniye atlar */
-        }
-
+        body.anim-pulse .timer-circle { animation: pulse 1s infinite ease-in-out; }
+        body.anim-none .timer-progress { transition: none; }
+        body.anim-smooth .timer-progress { transition: stroke-dashoffset 0.1s linear; }
+        body.anim-tick .timer-progress { transition: stroke-dashoffset 0.2s steps(1); }
 
     </style>
 </head>
@@ -342,8 +386,19 @@
 
     <!-- Üst Menü -->
     <div class="top-bar">
-        <button class="mode-btn active" onclick="setMode('stopwatch')">Kronometre</button>
-        <button class="mode-btn" onclick="setMode('pomodoro')">Pomodoro</button>
+        <!-- Ayarlar Butonu (Simge) -->
+        <button class="settings-btn" onclick="toggleSettings()" aria-label="Ayarlar">
+            <svg viewBox="0 0 24 24">
+                <path d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.06-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.73,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.06,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.43-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.49-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/>
+            </svg>
+        </button>
+        
+        <div class="mode-selector">
+            <button class="mode-btn active" onclick="setMode('stopwatch')">Kronometre</button>
+            <button class="mode-btn" onclick="setMode('pomodoro')">Pomodoro</button>
+        </div>
+
+        <div class="spacer"></div>
     </div>
 
     <!-- Ana Gösterge -->
@@ -354,7 +409,6 @@
                 <circle class="timer-progress" id="progressRing" cx="140" cy="140" r="130"></circle>
             </svg>
             <div class="time-display" id="timeDisplay">00:00.00</div>
-            <div class="ms-display" id="msDisplay" style="display:none;"></div> <!-- MS ayrılabilir istenirse -->
         </div>
     </div>
 
@@ -365,109 +419,105 @@
         <button class="ctrl-btn btn-lap" id="lapBtn" onclick="recordLap()">Tur</button>
     </div>
 
-    <!-- Alt Paneller (Tur ve Ayarlar) -->
-    <div class="bottom-panels">
-        <div class="panel-tabs">
-            <button class="tab-btn active" onclick="switchTab('lapsTab')">Turlar</button>
-            <button class="tab-btn" onclick="switchTab('settingsTab')">Görünüm Ayarları</button>
-        </div>
-        
-        <!-- Tur Listesi -->
-        <div id="lapsTab" class="panel-content active">
-            <ul class="lap-list" id="lapList">
-                <li style="text-align:center; color:var(--text-muted); font-family: 'Roboto', sans-serif;">Henüz tur kaydedilmedi.</li>
-            </ul>
-        </div>
+    <!-- Turlar Listesi (Ana Ekranda) -->
+    <div class="laps-container" id="lapsContainer">
+        <ul class="lap-list" id="lapList">
+            <!-- Turlar buraya eklenecek -->
+        </ul>
+    </div>
 
-        <!-- Ayarlar -->
-        <div id="settingsTab" class="panel-content">
+    <!-- Ayarlar Modalı (Açılır Menü) -->
+    <div class="settings-overlay" id="settingsOverlay" onclick="closeSettings(event)">
+        <div class="settings-panel" onclick="event.stopPropagation()">
+            <div class="settings-header">
+                <h2>Görünüm ve Ayarlar</h2>
+                <button class="close-btn" onclick="toggleSettings()">✕</button>
+            </div>
             
-            <!-- Renk Temaları -->
-            <div class="setting-group">
-                <div class="setting-title">Tema Rengi</div>
-                <div class="options-row">
-                    <div class="color-circle active" style="background-color: #00e5ff;" onclick="applyColor(this, '#00e5ff')"></div>
-                    <div class="color-circle" style="background-color: #ff3366;" onclick="applyColor(this, '#ff3366')"></div>
-                    <div class="color-circle" style="background-color: #00ff66;" onclick="applyColor(this, '#00ff66')"></div>
-                    <div class="color-circle" style="background-color: #ffd700;" onclick="applyColor(this, '#ffd700')"></div>
-                    <div class="color-circle" style="background-color: #bc13fe;" onclick="applyColor(this, '#bc13fe')"></div>
-                    <div class="color-circle" style="background-color: #ff8c00;" onclick="applyColor(this, '#ff8c00')"></div>
+            <div class="settings-content">
+                <!-- Renk Temaları -->
+                <div class="setting-group">
+                    <div class="setting-title">Tema Rengi</div>
+                    <div class="options-row">
+                        <div class="color-circle active" style="background-color: #00e5ff;" onclick="applyColor(this, '#00e5ff')"></div>
+                        <div class="color-circle" style="background-color: #ff3366;" onclick="applyColor(this, '#ff3366')"></div>
+                        <div class="color-circle" style="background-color: #00ff66;" onclick="applyColor(this, '#00ff66')"></div>
+                        <div class="color-circle" style="background-color: #ffd700;" onclick="applyColor(this, '#ffd700')"></div>
+                        <div class="color-circle" style="background-color: #bc13fe;" onclick="applyColor(this, '#bc13fe')"></div>
+                        <div class="color-circle" style="background-color: #ff8c00;" onclick="applyColor(this, '#ff8c00')"></div>
+                    </div>
+                </div>
+
+                <!-- Arka Plan Teması -->
+                <div class="setting-group">
+                    <div class="setting-title">Arka Plan Modu</div>
+                    <div class="options-row">
+                        <button class="opt-btn bg-opt active" onclick="applyTheme(this, 'dark')">Koyu Tema</button>
+                        <button class="opt-btn bg-opt" onclick="applyTheme(this, 'light')">Açık Tema</button>
+                    </div>
+                </div>
+
+                <!-- Font Seçimi -->
+                <div class="setting-group">
+                    <div class="setting-title">Yazı Tipi (Font)</div>
+                    <div class="options-row">
+                        <button class="opt-btn font-opt active" onclick="applyFont(this, 'Share Tech Mono')">Dijital</button>
+                        <button class="opt-btn font-opt" onclick="applyFont(this, 'Orbitron')">Cyber</button>
+                        <button class="opt-btn font-opt" onclick="applyFont(this, 'Press Start 2P')">Arcade</button>
+                        <button class="opt-btn font-opt" onclick="applyFont(this, 'Rajdhani')">Modern</button>
+                        <button class="opt-btn font-opt" onclick="applyFont(this, 'Caveat')">El Yazısı</button>
+                    </div>
+                </div>
+
+                <!-- Görünüm (Layout) -->
+                <div class="setting-group">
+                    <div class="setting-title">Sayaç Görünümü</div>
+                    <div class="options-row">
+                        <button class="opt-btn layout-opt active" onclick="applyLayout(this, 'layout-classic')">Klasik Halka</button>
+                        <button class="opt-btn layout-opt" onclick="applyLayout(this, 'layout-minimal')">Minimal (Halkasız)</button>
+                        <button class="opt-btn layout-opt" onclick="applyLayout(this, 'layout-dashboard')">Dashboard</button>
+                    </div>
+                </div>
+
+                <!-- Animasyon Stili -->
+                <div class="setting-group">
+                    <div class="setting-title">Animasyon Stili</div>
+                    <div class="options-row">
+                        <button class="opt-btn anim-opt active" onclick="applyAnim(this, 'anim-smooth')">Akıcı</button>
+                        <button class="opt-btn anim-opt" onclick="applyAnim(this, 'anim-tick')">Tik-Tak</button>
+                        <button class="opt-btn anim-opt" onclick="applyAnim(this, 'anim-pulse')">Nabız</button>
+                        <button class="opt-btn anim-opt" onclick="applyAnim(this, 'anim-none')">Kapalı</button>
+                    </div>
                 </div>
             </div>
-
-            <!-- Arka Plan Teması -->
-            <div class="setting-group">
-                <div class="setting-title">Arka Plan Modu</div>
-                <div class="options-row">
-                    <button class="opt-btn bg-opt active" onclick="applyTheme(this, 'dark')">Koyu Tema</button>
-                    <button class="opt-btn bg-opt" onclick="applyTheme(this, 'light')">Açık Tema</button>
-                </div>
-            </div>
-
-            <!-- Font Seçimi -->
-            <div class="setting-group">
-                <div class="setting-title">Yazı Tipi (Font)</div>
-                <div class="options-row">
-                    <button class="opt-btn font-opt active" onclick="applyFont(this, 'Share Tech Mono')">Dijital</button>
-                    <button class="opt-btn font-opt" onclick="applyFont(this, 'Orbitron')">Cyberpunk</button>
-                    <button class="opt-btn font-opt" onclick="applyFont(this, 'Press Start 2P')">Arcade</button>
-                    <button class="opt-btn font-opt" onclick="applyFont(this, 'Rajdhani')">Modern</button>
-                    <button class="opt-btn font-opt" onclick="applyFont(this, 'Caveat')">El Yazısı</button>
-                </div>
-            </div>
-
-            <!-- Görünüm (Layout) -->
-            <div class="setting-group">
-                <div class="setting-title">Sayaç Görünümü</div>
-                <div class="options-row">
-                    <button class="opt-btn layout-opt active" onclick="applyLayout(this, 'layout-classic')">Klasik Halka</button>
-                    <button class="opt-btn layout-opt" onclick="applyLayout(this, 'layout-minimal')">Minimal (Halkasız)</button>
-                    <button class="opt-btn layout-opt" onclick="applyLayout(this, 'layout-dashboard')">Dashboard</button>
-                </div>
-            </div>
-
-            <!-- Animasyon Stili -->
-            <div class="setting-group">
-                <div class="setting-title">Animasyon Stili</div>
-                <div class="options-row">
-                    <button class="opt-btn anim-opt active" onclick="applyAnim(this, 'anim-smooth')">Akıcı (Pürüzsüz)</button>
-                    <button class="opt-btn anim-opt" onclick="applyAnim(this, 'anim-tick')">Tik-Tak (Saniyeli)</button>
-                    <button class="opt-btn anim-opt" onclick="applyAnim(this, 'anim-pulse')">Nabız (Atımlı)</button>
-                    <button class="opt-btn anim-opt" onclick="applyAnim(this, 'anim-none')">Kapalı</button>
-                </div>
-            </div>
-
         </div>
     </div>
 
     <script>
-        /* --- VETA ENGINE v2.0 - Core Logic --- */
-        let mode = 'stopwatch'; // 'stopwatch' veya 'pomodoro'
+        /* --- VETA ENGINE v3.0 - Core Logic --- */
+        let mode = 'stopwatch';
         let isRunning = false;
         let startTime = 0;
         let elapsedTime = 0;
         let animationFrameId;
         
-        // Pomodoro Ayarları (milisaniye cinsinden)
         const POMODORO_WORK_TIME = 25 * 60 * 1000;
         let pomodoroTimeLeft = POMODORO_WORK_TIME;
 
-        // UI Elementleri
         const timeDisplay = document.getElementById('timeDisplay');
         const progressRing = document.getElementById('progressRing');
         const startBtn = document.getElementById('startBtn');
         const lapBtn = document.getElementById('lapBtn');
         const lapList = document.getElementById('lapList');
+        const settingsOverlay = document.getElementById('settingsOverlay');
         
         let lapCount = 1;
 
-        // Çember Çevresi Hesaplama
         const radius = progressRing.r.baseVal.value;
         const circumference = 2 * Math.PI * radius;
         progressRing.style.strokeDasharray = `${circumference} ${circumference}`;
         progressRing.style.strokeDashoffset = circumference;
 
-        /* --- Çekirdek Döngü (Game Loop benzeri) --- */
         function updateEngine(timestamp) {
             if (!isRunning) return;
 
@@ -477,16 +527,14 @@
             if (mode === 'stopwatch') {
                 elapsedTime = performance.now() - startTime;
                 displayTime = elapsedTime;
-                // Kronometre için halka 60 saniyede bir tam tur döner
                 progress = (displayTime % 60000) / 60000; 
             } else {
-                // Pomodoro
                 const passedTime = performance.now() - startTime;
                 let currentLeft = pomodoroTimeLeft - passedTime;
                 
                 if (currentLeft <= 0) {
                     currentLeft = 0;
-                    toggleTimer(); // Süre bitince durdur
+                    toggleTimer();
                     alert("Pomodoro Tamamlandı!");
                 }
                 displayTime = currentLeft;
@@ -495,14 +543,12 @@
 
             renderTime(displayTime);
             
-            // Halka Animasyonu (anim-tick modu için özel kontrol gerekmez, CSS hallediyor)
             const offset = circumference - (progress * circumference);
             progressRing.style.strokeDashoffset = offset;
 
             animationFrameId = requestAnimationFrame(updateEngine);
         }
 
-        /* --- Zaman Formatlama ve Render --- */
         function renderTime(timeInMs) {
             const date = new Date(timeInMs);
             const minutes = String(date.getUTCMinutes()).padStart(2, '0');
@@ -512,29 +558,23 @@
             timeDisplay.textContent = `${minutes}:${seconds}.${milliseconds}`;
         }
 
-        /* --- Kontroller --- */
         function toggleTimer() {
             if (isRunning) {
-                // Durdur
                 isRunning = false;
                 cancelAnimationFrame(animationFrameId);
-                if (mode === 'stopwatch') {
-                    // elapsedTime zaten son değeri tutuyor
-                } else {
+                if (mode !== 'stopwatch') {
                     pomodoroTimeLeft = pomodoroTimeLeft - (performance.now() - startTime);
                 }
                 startBtn.textContent = 'Başla';
-                startBtn.style.backgroundColor = 'rgba(46, 213, 115, 0.8)';
-                lapBtn.textContent = 'Tur';
+                startBtn.style.backgroundColor = 'rgba(46, 213, 115, 0.9)';
             } else {
-                // Başlat
                 isRunning = true;
                 startTime = performance.now();
                 if (mode === 'stopwatch') {
-                    startTime -= elapsedTime; // Kaldığı yerden devam etmesi için
+                    startTime -= elapsedTime;
                 }
                 startBtn.textContent = 'Durdur';
-                startBtn.style.backgroundColor = 'rgba(255, 71, 87, 0.8)';
+                startBtn.style.backgroundColor = 'rgba(255, 71, 87, 0.9)';
                 animationFrameId = requestAnimationFrame(updateEngine);
             }
         }
@@ -543,49 +583,45 @@
             isRunning = false;
             cancelAnimationFrame(animationFrameId);
             startBtn.textContent = 'Başla';
-            startBtn.style.backgroundColor = 'rgba(46, 213, 115, 0.8)';
+            startBtn.style.backgroundColor = 'rgba(46, 213, 115, 0.9)';
             
             if (mode === 'stopwatch') {
                 elapsedTime = 0;
                 renderTime(0);
-                progressRing.style.strokeDashoffset = circumference;
             } else {
                 pomodoroTimeLeft = POMODORO_WORK_TIME;
                 renderTime(pomodoroTimeLeft);
-                progressRing.style.strokeDashoffset = circumference;
             }
-
-            // Turları Temizle
-            lapList.innerHTML = `<li style="text-align:center; color:var(--text-muted); font-family: 'Roboto', sans-serif;">Henüz tur kaydedilmedi.</li>`;
+            progressRing.style.strokeDashoffset = circumference;
+            lapList.innerHTML = '';
             lapCount = 1;
         }
 
         function recordLap() {
-            if (mode !== 'stopwatch') return; // Pomodoroda tur olmaz
-            
+            if (mode !== 'stopwatch') return;
             if (!isRunning && elapsedTime === 0) return;
-
-            // İlk tur kaydedildiğinde boş mesajı sil
-            if (lapCount === 1) lapList.innerHTML = '';
 
             const li = document.createElement('li');
             li.className = 'lap-item';
             
             const lapTitle = document.createElement('span');
             lapTitle.textContent = `Tur ${lapCount}`;
+            lapTitle.style.color = "var(--text-muted)";
             
             const lapTimeSpan = document.createElement('span');
             lapTimeSpan.textContent = timeDisplay.textContent;
+            lapTimeSpan.style.color = "var(--primary-color)";
+            lapTimeSpan.style.fontWeight = "bold";
 
             li.appendChild(lapTitle);
             li.appendChild(lapTimeSpan);
             
-            lapList.prepend(li); // En yeni tur en üste eklensin
+            lapList.prepend(li);
             lapCount++;
         }
 
         function setMode(newMode) {
-            if(isRunning) toggleTimer(); // Mod değişirken durdur
+            if(isRunning) toggleTimer();
             
             mode = newMode;
             document.querySelectorAll('.mode-btn').forEach(btn => btn.classList.remove('active'));
@@ -593,19 +629,24 @@
 
             if (mode === 'stopwatch') {
                 lapBtn.style.display = 'block';
+                document.getElementById('lapsContainer').style.display = 'block';
             } else {
-                lapBtn.style.display = 'none'; // Pomodoroda tur butonu gizle
+                lapBtn.style.display = 'none';
+                document.getElementById('lapsContainer').style.display = 'none';
             }
             resetTimer();
         }
 
-        /* --- Arayüz Kontrolleri (Sekmeler ve Ayarlar) --- */
-        function switchTab(tabId) {
-            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-            event.target.classList.add('active');
-            
-            document.querySelectorAll('.panel-content').forEach(panel => panel.classList.remove('active'));
-            document.getElementById(tabId).classList.add('active');
+        /* --- Ayarlar Modalı İşlemleri --- */
+        function toggleSettings() {
+            settingsOverlay.classList.toggle('active');
+        }
+
+        function closeSettings(e) {
+            // Eğer siyah arkaplana tıklanırsa kapat (panele tıklanırsa kapanmaz)
+            if(e.target === settingsOverlay) {
+                settingsOverlay.classList.remove('active');
+            }
         }
 
         // Ayar Uygulayıcılar
@@ -629,21 +670,17 @@
             document.querySelectorAll('.font-opt').forEach(el => el.classList.remove('active'));
             element.classList.add('active');
             
-            // Eğer Arcade fontu seçilirse font boyutunu biraz küçült (sığması için)
             if(fontName === 'Press Start 2P') {
                 timeDisplay.style.fontSize = '2.2rem';
             } else {
                 timeDisplay.style.fontSize = '3.5rem';
             }
-            
             document.documentElement.style.setProperty('--font-family', `'${fontName}', sans-serif`);
         }
 
         function applyLayout(element, layoutClass) {
             document.querySelectorAll('.layout-opt').forEach(el => el.classList.remove('active'));
             element.classList.add('active');
-            
-            // Eski layout sınıflarını temizle
             document.body.classList.remove('layout-classic', 'layout-minimal', 'layout-dashboard');
             document.body.classList.add(layoutClass);
         }
@@ -651,16 +688,13 @@
         function applyAnim(element, animClass) {
             document.querySelectorAll('.anim-opt').forEach(el => el.classList.remove('active'));
             element.classList.add('active');
-            
             document.body.classList.remove('anim-smooth', 'anim-tick', 'anim-pulse', 'anim-none');
             document.body.classList.add(animClass);
-            
-            // Eğer pulse seçiliyse ve çalışmıyorsa animasyonu geçici durdurmak gerekebilir ama CSS hallediyor.
         }
 
-        // Başlangıç Ayarı
+        // Başlat
         renderTime(0);
 
     </script>
 </body>
-                    </html>
+</html>
