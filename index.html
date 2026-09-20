@@ -2,679 +2,726 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Veta Kronometre Pro</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Veta Focus Pro</title>
     <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#121212">
-    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@500;700&family=Press+Start+2P&family=Rajdhani:wght@500;700&family=Caveat:wght@600&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <meta name="theme-color" content="#050505">
     
-    <!-- Dopamin Efekti İçin Confetti Kütüphanesi -->
+    <!-- Ultra-Premium Font Kütüphanesi -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Share+Tech+Mono&family=Orbitron:wght@500;700&family=Space+Grotesk:wght@500;700&family=Rajdhani:wght@500;700&family=Caveat:wght@600&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 
     <style>
+        /* --- VETA ENGINE v5.0 - CORE VARIABLES --- */
         :root {
-            --bg-color: #0d0d12;
-            --surface-color: #1a1a24;
-            --text-color: #ffffff;
-            --text-muted: #888899;
-            --primary-color: #00e5ff;
-            --ring-bg: #2a2a35;
-            --font-family: 'Share Tech Mono', monospace;
-            --glow-spread: 15px;
+            --bg-color: #050505;
+            --surface-color: rgba(25, 25, 30, 0.6);
+            --surface-border: rgba(255, 255, 255, 0.08);
+            --text-main: #ffffff;
+            --text-muted: #8e8e9f;
+            --primary: #00e5ff;
+            --primary-glow: rgba(0, 229, 255, 0.4);
+            --ring-bg: rgba(255, 255, 255, 0.05);
+            --timer-font: 'Space Grotesk', sans-serif;
+            --ui-font: 'Inter', sans-serif;
+            --safe-area-bottom: env(safe-area-inset-bottom, 20px);
         }
 
-        body.light-mode {
-            --bg-color: #f0f2f5;
-            --surface-color: #ffffff;
-            --text-color: #1a1a1a;
-            --text-muted: #666666;
-            --ring-bg: #e0e0e0;
+        body.light-theme {
+            --bg-color: #f2f2f7;
+            --surface-color: rgba(255, 255, 255, 0.8);
+            --surface-border: rgba(0, 0, 0, 0.05);
+            --text-main: #1c1c1e;
+            --text-muted: #8e8e93;
+            --ring-bg: rgba(0, 0, 0, 0.05);
         }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-tap-highlight-color: transparent; }
+        * {
+            box-sizing: border-box; margin: 0; padding: 0;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+        }
 
         body {
             background-color: var(--bg-color);
-            color: var(--text-color);
-            font-family: var(--font-family);
+            color: var(--text-main);
+            font-family: var(--ui-font);
+            height: 100vh;
             display: flex;
             flex-direction: column;
-            height: 100vh;
             overflow: hidden;
-            transition: background-color 0.4s ease, color 0.4s ease;
+            transition: background-color 0.5s ease;
         }
 
-        /* RPG XP Bar Sistemi */
-        .user-profile {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 10px 20px;
-            margin-top: 10px;
-            gap: 15px;
-            animation: slideDown 0.5s ease;
-        }
-
-        .level-badge {
-            background: var(--surface-color);
-            border: 2px solid var(--primary-color);
-            color: var(--primary-color);
-            width: 40px;
-            height: 40px;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-family: 'Orbitron', sans-serif;
-            font-weight: 700;
-            font-size: 1.1rem;
-            box-shadow: 0 0 10px rgba(0,0,0,0.2), inset 0 0 5px var(--primary-color);
-            text-shadow: 0 0 5px var(--primary-color);
-        }
-
-        .xp-container {
+        /* --- APP ARCHITECTURE (PAGES) --- */
+        .app-container {
             flex: 1;
-            max-width: 200px;
+            position: relative;
+            overflow: hidden;
         }
 
-        .xp-text {
+        .page {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            display: flex;
+            flex-direction: column;
+            opacity: 0;
+            pointer-events: none;
+            transform: translateX(20px);
+            transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+            padding-bottom: calc(80px + var(--safe-area-bottom));
+        }
+
+        .page.active {
+            opacity: 1;
+            pointer-events: auto;
+            transform: translateX(0);
+        }
+
+        /* --- HEADER --- */
+        .header {
+            padding: 30px 25px 10px;
             display: flex;
             justify-content: space-between;
-            font-family: 'Roboto', sans-serif;
-            font-size: 0.75rem;
-            color: var(--text-muted);
-            margin-bottom: 5px;
-            font-weight: bold;
-            text-transform: uppercase;
+            align-items: center;
+        }
+        .header h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            background: linear-gradient(90deg, var(--text-main), var(--text-muted));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
 
-        .xp-bar-bg {
-            width: 100%;
-            height: 8px;
-            background: var(--ring-bg);
-            border-radius: 4px;
+        /* --- TIMER DISPLAY (ULTIMATE RING) --- */
+        .timer-showcase {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .timer-circle {
+            position: relative;
+            width: 300px; height: 300px;
+            display: flex; align-items: center; justify-content: center;
+        }
+
+        .timer-svg {
+            position: absolute; width: 100%; height: 100%; transform: rotate(-90deg);
+            filter: drop-shadow(0 0 15px var(--primary-glow));
+        }
+        
+        .timer-bg { fill: none; stroke: var(--ring-bg); stroke-width: 4; }
+        .timer-progress {
+            fill: none; stroke: var(--primary); stroke-width: 6;
+            stroke-linecap: round;
+            stroke-dasharray: 879; /* 2 * PI * 140 */
+            stroke-dashoffset: 879;
+        }
+
+        .time-text {
+            font-family: var(--timer-font);
+            font-size: 4.5rem;
+            font-weight: 700;
+            letter-spacing: -1px;
+            font-variant-numeric: tabular-nums; /* Rakamların titremesini engeller */
+            z-index: 10;
+            text-shadow: 0 4px 20px rgba(0,0,0,0.4);
+        }
+        
+        .ms-text { font-size: 1.5rem; color: var(--text-muted); position: absolute; bottom: 60px; }
+
+        /* Odak Çekirdeği (Sadece Pomodoro'da) */
+        .focus-core {
+            position: absolute;
+            width: 220px; height: 220px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.8), var(--primary) 60%, transparent 80%);
+            opacity: 0;
+            filter: blur(10px);
+            z-index: 0;
+            transition: opacity 1s ease;
+            animation: corePulse 4s infinite alternate ease-in-out;
+        }
+
+        @keyframes corePulse {
+            0% { transform: scale(0.85); filter: blur(15px); opacity: 0.1; }
+            100% { transform: scale(1.05); filter: blur(25px); opacity: 0.3; }
+        }
+
+        /* --- CONTROLS (GLASSMORPHISM) --- */
+        .controls-wrapper {
+            display: flex;
+            justify-content: center;
+            gap: 25px;
+            padding: 20px;
+        }
+
+        .btn-glass {
+            width: 75px; height: 75px;
+            border-radius: 50%;
+            border: 1px solid var(--surface-border);
+            background: var(--surface-color);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            color: var(--text-main);
+            font-family: var(--ui-font);
+            font-weight: 600;
+            font-size: 15px;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+            transition: all 0.2s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+        
+        .btn-glass:active { transform: scale(0.9); }
+        .btn-start { background: var(--primary); color: #000; border: none; box-shadow: 0 0 20px var(--primary-glow); }
+        .btn-stop { background: #ff3b30; color: #fff; border: none; box-shadow: 0 0 20px rgba(255, 59, 48, 0.4); }
+
+        /* --- LAPS & LISTS --- */
+        .list-container {
+            flex: 1; overflow-y: auto; padding: 0 25px;
+            -webkit-overflow-scrolling: touch;
+        }
+        .list-container::-webkit-scrollbar { display: none; }
+        
+        .lap-item {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 16px 20px;
+            margin-bottom: 10px;
+            background: var(--surface-color);
+            border: 1px solid var(--surface-border);
+            border-radius: 16px;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            font-family: var(--timer-font);
+            font-size: 1.1rem;
+            animation: slideUp 0.3s ease;
+        }
+
+        @keyframes slideUp { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+        
+        .lap-title { color: var(--text-muted); font-family: var(--ui-font); font-size: 0.9rem; font-weight: 500; }
+        .lap-best { color: #34c759; text-shadow: 0 0 10px rgba(52, 199, 89, 0.3); }
+        .lap-worst { color: #ff3b30; text-shadow: 0 0 10px rgba(255, 59, 48, 0.3); }
+
+        /* --- PROFILE & SETTINGS (GAMIFICATION) --- */
+        .profile-card {
+            background: linear-gradient(145deg, var(--surface-color), rgba(0,0,0,0.5));
+            border: 1px solid var(--primary-glow);
+            border-radius: 24px;
+            padding: 25px;
+            margin: 20px 25px;
+            text-align: center;
+            position: relative;
             overflow: hidden;
         }
+        
+        .rank-title { font-family: 'Orbitron', sans-serif; font-size: 1.4rem; color: var(--primary); margin-bottom: 5px; font-weight: 700; text-shadow: 0 0 15px var(--primary-glow); }
+        .level-text { font-size: 0.9rem; color: var(--text-muted); margin-bottom: 20px; text-transform: uppercase; letter-spacing: 2px; }
+        
+        .xp-bar-container { height: 8px; background: var(--ring-bg); border-radius: 4px; overflow: hidden; margin-bottom: 10px; }
+        .xp-fill { height: 100%; background: var(--primary); width: 0%; box-shadow: 0 0 10px var(--primary); transition: width 1s cubic-bezier(0.25, 1, 0.5, 1); }
+        .xp-details { display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--text-muted); font-weight: 600; }
 
-        .xp-bar-fill {
-            height: 100%;
-            background: var(--primary-color);
-            width: 0%;
-            border-radius: 4px;
-            transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 0 0 10px var(--primary-color);
+        /* Ayarlar Grid Yapısı */
+        .settings-grid { padding: 0 25px 30px; display: grid; gap: 25px; }
+        .setting-block h3 { font-size: 0.85rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; font-weight: 600; }
+        
+        .scroll-row { display: flex; gap: 12px; overflow-x: auto; padding-bottom: 5px; -webkit-overflow-scrolling: touch; }
+        .scroll-row::-webkit-scrollbar { display: none; }
+        
+        .opt-pill {
+            background: var(--surface-color); border: 1px solid var(--surface-border);
+            color: var(--text-main); padding: 12px 20px; border-radius: 100px;
+            white-space: nowrap; font-size: 0.9rem; font-weight: 500;
+            transition: all 0.2s;
+        }
+        .opt-pill.active { background: var(--primary); color: #000; border-color: var(--primary); box-shadow: 0 0 15px var(--primary-glow); }
+        
+        .color-dot {
+            width: 40px; height: 40px; border-radius: 50%; border: 2px solid transparent;
+            flex-shrink: 0; transition: transform 0.2s; cursor: pointer;
+        }
+        .color-dot.active { transform: scale(1.15); border-color: var(--text-main); box-shadow: 0 0 15px currentColor; }
+        
+        .custom-color { -webkit-appearance: none; width: 40px; height: 40px; border: none; border-radius: 50%; overflow: hidden; padding: 0; }
+        .custom-color::-webkit-color-swatch-wrapper { padding: 0; }
+        .custom-color::-webkit-color-swatch { border: none; border-radius: 50%; }
+
+        /* --- BOTTOM NAVIGATION --- */
+        .bottom-nav {
+            position: fixed; bottom: 0; left: 0; width: 100%;
+            height: calc(70px + var(--safe-area-bottom));
+            background: rgba(15, 15, 18, 0.85);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-top: 1px solid var(--surface-border);
+            display: flex; justify-content: space-around; align-items: center;
+            padding-bottom: var(--safe-area-bottom);
+            z-index: 100;
         }
 
-        @keyframes slideDown {
-            from { opacity: 0; transform: translateY(-20px); }
-            to { opacity: 1; transform: translateY(0); }
+        .nav-item {
+            flex: 1; display: flex; flex-direction: column; align-items: center; gap: 5px;
+            color: var(--text-muted); cursor: pointer; transition: color 0.3s;
         }
-
-        /* Üst Menü */
-        .top-bar { display: flex; align-items: center; justify-content: space-between; padding: 10px 20px; z-index: 10; }
-        .settings-btn { background: transparent; border: none; color: var(--text-muted); cursor: pointer; padding: 5px; transition: color 0.3s, transform 0.3s; }
-        .settings-btn:active { transform: rotate(45deg); }
-        .settings-btn svg { width: 28px; height: 28px; fill: currentColor; }
-        .mode-selector { display: flex; gap: 10px; }
-        .mode-btn { background: transparent; border: 2px solid transparent; color: var(--text-muted); padding: 6px 16px; border-radius: 20px; font-size: 14px; font-family: 'Roboto', sans-serif; font-weight: 500; cursor: pointer; transition: all 0.3s ease; }
-        .mode-btn.active { background: var(--surface-color); color: var(--primary-color); box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); }
-        .spacer { width: 38px; }
-
-        /* Ana Gösterge Alanı & Kristal */
-        .display-container { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; min-height: 350px; }
+        .nav-item svg { width: 24px; height: 24px; stroke: currentColor; stroke-width: 2; fill: none; stroke-linecap: round; stroke-linejoin: round; transition: transform 0.3s; }
+        .nav-item span { font-size: 0.75rem; font-weight: 600; }
         
-        .timer-circle {
-            position: relative; width: 290px; height: 290px; display: flex; align-items: center; justify-content: center;
-        }
+        .nav-item.active { color: var(--primary); }
+        .nav-item.active svg { transform: translateY(-3px); filter: drop-shadow(0 2px 5px var(--primary-glow)); }
 
-        /* Sis ve Işık Efekti (Fog Engine) */
-        .glow-effect {
-            position: absolute; width: 100%; height: 100%; border-radius: 50%;
-            background: radial-gradient(circle, var(--primary-color) 0%, transparent 70%);
-            opacity: 0.15; filter: blur(var(--glow-spread));
-            transition: all 0.5s ease;
-            z-index: 0;
-            animation: breathe 4s infinite alternate ease-in-out;
-        }
-
-        @keyframes breathe {
-            0% { transform: scale(0.95); opacity: 0.1; }
-            100% { transform: scale(1.1); opacity: 0.25; }
-        }
-
-        .timer-svg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; transform: rotate(-90deg); z-index: 1; filter: drop-shadow(0 0 10px var(--primary-color)); }
-        .timer-bg { fill: none; stroke: var(--ring-bg); stroke-width: 6; transition: stroke 0.4s ease; }
-        .timer-progress { fill: none; stroke: var(--primary-color); stroke-width: 6; stroke-linecap: round; stroke-dasharray: 816; stroke-dashoffset: 816; transition: stroke 0.4s ease; }
-
-        /* Odak Kristali (İleride evrimleşecek objenin temeli) */
-        .focus-crystal {
-            position: absolute; top: -20px;
-            width: 30px; height: 30px;
-            background: var(--primary-color);
-            clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
-            box-shadow: 0 0 20px var(--primary-color);
-            opacity: 0;
-            transition: opacity 0.5s ease;
-            z-index: 5;
-            animation: floatCrystal 3s infinite ease-in-out;
-        }
-        
-        body.mode-pomodoro .focus-crystal { opacity: 0.8; }
-
-        @keyframes floatCrystal {
-            0%, 100% { transform: translateY(0) scale(1); filter: brightness(1); }
-            50% { transform: translateY(-10px) scale(1.1); filter: brightness(1.3); }
-        }
-
-        .time-display { font-size: 4rem; font-weight: normal; letter-spacing: 2px; z-index: 10; text-shadow: 0 0 20px rgba(0,0,0,0.3); transition: all 0.4s ease; }
-        
-        /* Görünümler */
-        body.layout-minimal .timer-bg, body.layout-minimal .timer-progress, body.layout-minimal .glow-effect { display: none; }
-        body.layout-dashboard .timer-circle { width: 320px; height: 150px; }
-        body.layout-dashboard .timer-bg, body.layout-dashboard .timer-progress, body.layout-dashboard .glow-effect { display: none; }
-        body.layout-dashboard .time-display { font-size: 3.5rem; background: var(--surface-color); padding: 20px 40px; border-radius: 15px; border-left: 5px solid var(--primary-color); }
-
-        /* Kontroller */
-        .controls { display: flex; justify-content: center; gap: 20px; padding: 10px 30px 20px 30px; z-index: 10;}
-        .ctrl-btn { width: 75px; height: 75px; border-radius: 50%; border: none; font-size: 16px; font-weight: bold; font-family: 'Roboto', sans-serif; color: #fff; cursor: pointer; box-shadow: 0 5px 20px rgba(0,0,0,0.3); transition: transform 0.1s, filter 0.3s; }
-        .ctrl-btn:active { transform: scale(0.90); }
-        .btn-start { background: linear-gradient(135deg, #2ed573, #26ae60); }
-        .btn-stop { background: linear-gradient(135deg, #ff4757, #c0392b); }
-        .btn-lap { background: linear-gradient(135deg, #747d8c, #57606f); }
-        .btn-reset { background: linear-gradient(135deg, #ffa502, #e67e22); }
-
-        /* Turlar */
-        .laps-container { flex: 1; overflow-y: auto; padding: 0 30px 30px 30px; max-height: 25vh; }
-        .laps-container::-webkit-scrollbar { display: none; }
-        .lap-list { list-style: none; }
-        .lap-item { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--ring-bg); font-family: var(--font-family); font-size: 1.1rem; animation: fadeIn 0.3s ease; }
-        .lap-best { color: #2ed573; font-weight: bold; }
-        .lap-worst { color: #ff4757; font-weight: bold; }
-
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
-
-        /* Ayarlar Modalı */
-        .settings-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); z-index: 100; opacity: 0; pointer-events: none; transition: opacity 0.4s ease; }
-        .settings-overlay.active { opacity: 1; pointer-events: auto; }
-        .settings-panel { position: absolute; bottom: 0; left: 0; width: 100%; height: 85vh; background: var(--surface-color); border-top-left-radius: 35px; border-top-right-radius: 35px; padding: 25px 25px 50px 25px; transform: translateY(100%); transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); display: flex; flex-direction: column; box-shadow: 0 -10px 40px rgba(0,0,0,0.5); }
-        .settings-overlay.active .settings-panel { transform: translateY(0); }
-        .settings-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid var(--ring-bg); }
-        .settings-header h2 { font-family: 'Roboto', sans-serif; font-size: 1.3rem; font-weight: 700; color: var(--text-color); }
-        .close-btn { background: var(--ring-bg); border: none; color: var(--text-color); width: 35px; height: 35px; border-radius: 50%; font-size: 16px; font-weight: bold; cursor: pointer; }
-        
-        .settings-content { overflow-y: auto; flex: 1; padding-right: 5px; }
-        .settings-content::-webkit-scrollbar { display: none; }
-        .setting-group { margin-bottom: 25px; }
-        .setting-title { font-family: 'Roboto', sans-serif; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 12px; text-transform: uppercase; letter-spacing: 1.5px; font-weight: 700;}
-        
-        .options-row { display: flex; gap: 12px; overflow-x: auto; padding-bottom: 10px; }
-        .options-row::-webkit-scrollbar { display: none; }
-        
-        .opt-btn { background: var(--bg-color); border: 2px solid transparent; color: var(--text-color); padding: 10px 18px; border-radius: 12px; white-space: nowrap; font-family: 'Roboto', sans-serif; font-weight: 500; transition: all 0.2s; }
-        .opt-btn.active { border-color: var(--primary-color); color: var(--primary-color); background: rgba(0,0,0,0.2); box-shadow: 0 0 10px rgba(0,0,0,0.1); }
-        
-        /* Gelişmiş Renk Seçici */
-        .color-picker-wrapper { display: flex; align-items: center; gap: 15px; }
-        .custom-color-input { -webkit-appearance: none; width: 40px; height: 40px; border: none; border-radius: 50%; cursor: pointer; overflow: hidden; }
-        .custom-color-input::-webkit-color-swatch-wrapper { padding: 0; }
-        .custom-color-input::-webkit-color-swatch { border: 2px solid var(--text-color); border-radius: 50%; }
-        
-        .color-circle { width: 35px; height: 35px; border-radius: 50%; cursor: pointer; border: 2px solid transparent; flex-shrink: 0; transition: transform 0.2s, box-shadow 0.2s; }
-        .color-circle.active { border-color: var(--text-color); transform: scale(1.2); box-shadow: 0 0 15px currentColor; }
-
-        /* Animasyon Seçenekleri */
+        /* Animation Options */
         body.anim-smooth .timer-progress { transition: stroke-dashoffset 0.1s linear; }
         body.anim-tick .timer-progress { transition: stroke-dashoffset 0.2s steps(1); }
-        body.anim-pulse .timer-circle { animation: pulse 1s infinite ease-in-out; }
-        body.anim-none .timer-progress, body.anim-none .glow-effect { transition: none; animation: none; opacity: 0; }
-        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.03); } 100% { transform: scale(1); } }
-
+        body.anim-none .timer-progress, body.anim-none .focus-core { transition: none; animation: none; opacity: 0; }
     </style>
 </head>
-<body class="anim-smooth layout-classic mode-stopwatch">
+<body class="anim-smooth dark-theme">
 
-    <!-- RPG XP Bar ve Seviye Sistemi -->
-    <div class="user-profile">
-        <div class="level-badge" id="levelBadge">1</div>
-        <div class="xp-container">
-            <div class="xp-text">
-                <span id="rankTitle">Çaylak Odaklanıcı</span>
-                <span id="xpText">0 / 100 XP</span>
+    <div class="app-container">
+        
+        <!-- ================= STOPWATCH PAGE ================= -->
+        <div id="page-stopwatch" class="page active">
+            <div class="header">
+                <h1>Kronometre</h1>
             </div>
-            <div class="xp-bar-bg">
-                <div class="xp-bar-fill" id="xpBarFill"></div>
+            <div class="timer-showcase">
+                <div class="timer-circle">
+                    <svg class="timer-svg" viewBox="0 0 300 300">
+                        <circle class="timer-bg" cx="150" cy="150" r="140"></circle>
+                        <circle class="timer-progress" id="swRing" cx="150" cy="150" r="140"></circle>
+                    </svg>
+                    <div class="time-text" id="swTime">00:00</div>
+                    <div class="ms-text" id="swMs">.00</div>
+                </div>
+            </div>
+            <div class="controls-wrapper">
+                <button class="btn-glass" onclick="veta.reset('stopwatch')">Sıfırla</button>
+                <button class="btn-glass btn-start" id="swBtnStart" onclick="veta.toggle('stopwatch')">Başla</button>
+                <button class="btn-glass" id="swBtnLap" onclick="veta.lap()">Tur</button>
+            </div>
+            <div class="list-container" id="lapsContainer">
+                <!-- Laps go here -->
             </div>
         </div>
-    </div>
 
-    <!-- Üst Menü -->
-    <div class="top-bar">
-        <button class="settings-btn" onclick="toggleSettings()">
-            <svg viewBox="0 0 24 24"><path d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.06-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.73,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.06,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.43-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.49-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/></svg>
-        </button>
-        <div class="mode-selector">
-            <button class="mode-btn active" onclick="setMode('stopwatch')">Kronometre</button>
-            <button class="mode-btn" onclick="setMode('pomodoro')">Pomodoro</button>
-        </div>
-        <div class="spacer"></div>
-    </div>
-
-    <!-- Ana Gösterge -->
-    <div class="display-container">
-        <div class="timer-circle" id="timerCircle">
-            <div class="glow-effect"></div>
-            <div class="focus-crystal"></div>
-            <svg class="timer-svg" viewBox="0 0 280 280">
-                <circle class="timer-bg" cx="140" cy="140" r="130"></circle>
-                <circle class="timer-progress" id="progressRing" cx="140" cy="140" r="130"></circle>
-            </svg>
-            <div class="time-display" id="timeDisplay" style="font-size: 3.5rem;">00:00.00</div>
-        </div>
-    </div>
-
-    <!-- Kontroller -->
-    <div class="controls">
-        <button class="ctrl-btn btn-reset" onclick="resetTimer()">Sıfırla</button>
-        <button class="ctrl-btn btn-start" id="startBtn" onclick="toggleTimer()">Başla</button>
-        <button class="ctrl-btn btn-lap" id="lapBtn" onclick="recordLap()">Tur</button>
-    </div>
-
-    <!-- Turlar Listesi -->
-    <div class="laps-container" id="lapsContainer">
-        <ul class="lap-list" id="lapList"></ul>
-    </div>
-
-    <!-- Ayarlar Modalı -->
-    <div class="settings-overlay" id="settingsOverlay" onclick="closeSettings(event)">
-        <div class="settings-panel" onclick="event.stopPropagation()">
-            <div class="settings-header">
-                <h2>Özelleştirme (Premium)</h2>
-                <button class="close-btn" onclick="toggleSettings()">✕</button>
+        <!-- ================= POMODORO PAGE ================= -->
+        <div id="page-pomodoro" class="page">
+            <div class="header">
+                <h1>Odak Seansı</h1>
+            </div>
+            <div class="timer-showcase">
+                <div class="timer-circle">
+                    <div class="focus-core" id="focusCore"></div>
+                    <svg class="timer-svg" viewBox="0 0 300 300">
+                        <circle class="timer-bg" cx="150" cy="150" r="140"></circle>
+                        <circle class="timer-progress" id="pmRing" cx="150" cy="150" r="140"></circle>
+                    </svg>
+                    <div class="time-text" id="pmTime" style="font-size: 5.5rem;">25:00</div>
+                </div>
+            </div>
+            <div class="controls-wrapper">
+                <button class="btn-glass" onclick="veta.reset('pomodoro')">İptal</button>
+                <button class="btn-glass btn-start" id="pmBtnStart" onclick="veta.toggle('pomodoro')" style="width: 140px; border-radius: 100px;">Odaklan</button>
             </div>
             
-            <div class="settings-content">
-                
-                <!-- Renk Paleti (Neonlar + Özel Renk) -->
-                <div class="setting-group">
-                    <div class="setting-title">Aura Rengi (Neon & Özel)</div>
-                    <div class="color-picker-wrapper">
-                        <!-- Özel Renk Seçici -->
-                        <input type="color" class="custom-color-input" id="customColorPicker" value="#00e5ff" onchange="applyCustomColor(this.value)" title="Özel Renk Seç">
-                        <div class="options-row" style="padding-bottom: 0;">
-                            <div class="color-circle active" style="background-color: #00e5ff; color: #00e5ff;" onclick="applyColor(this, '#00e5ff')"></div>
-                            <div class="color-circle" style="background-color: #39ff14; color: #39ff14;" onclick="applyColor(this, '#39ff14')"></div> <!-- Neon Yeşil -->
-                            <div class="color-circle" style="background-color: #ff00ff; color: #ff00ff;" onclick="applyColor(this, '#ff00ff')"></div> <!-- Neon Pembe -->
-                            <div class="color-circle" style="background-color: #ff3300; color: #ff3300;" onclick="applyColor(this, '#ff3300')"></div> <!-- Neon Turuncu -->
-                            <div class="color-circle" style="background-color: #bf00ff; color: #bf00ff;" onclick="applyColor(this, '#bf00ff')"></div> <!-- Neon Mor -->
-                            <div class="color-circle" style="background-color: #ffe600; color: #ffe600;" onclick="applyColor(this, '#ffe600')"></div> <!-- Neon Sarı -->
+            <!-- Pomodoro Settings Inline -->
+            <div style="padding: 0 25px; margin-top: 20px;">
+                <h3 style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 10px; text-transform: uppercase;">Seans Süresi</h3>
+                <div class="scroll-row">
+                    <button class="opt-pill active" onclick="veta.setPomodoroTime(25, this)">25 Dk (Klasik)</button>
+                    <button class="opt-pill" onclick="veta.setPomodoroTime(45, this)">45 Dk (Derin Odak)</button>
+                    <button class="opt-pill" onclick="veta.setPomodoroTime(60, this)">60 Dk (Usta)</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= PROFILE & SETTINGS PAGE ================= -->
+        <div id="page-profile" class="page">
+            <div class="header">
+                <h1>Profil ve Arayüz</h1>
+            </div>
+            <div class="list-container">
+                <!-- Gamification Card -->
+                <div class="profile-card">
+                    <div class="rank-title" id="rankDisplay">Kahraman (Heroic)</div>
+                    <div class="level-text">Seviye <span id="levelDisplay">1</span></div>
+                    
+                    <div class="xp-bar-container">
+                        <div class="xp-fill" id="xpFill"></div>
+                    </div>
+                    <div class="xp-details">
+                        <span>Tecrübe</span>
+                        <span id="xpText">0 / 100 XP</span>
+                    </div>
+                </div>
+
+                <!-- Settings Engine -->
+                <div class="settings-grid">
+                    
+                    <div class="setting-block">
+                        <h3>Aura (Enerji Rengi)</h3>
+                        <div class="scroll-row">
+                            <input type="color" class="custom-color" id="customColor" value="#00e5ff" onchange="veta.applyColor(this.value)">
+                            <div class="color-dot active" style="background: #00e5ff; color: #00e5ff;" onclick="veta.applyColor('#00e5ff', this)"></div>
+                            <div class="color-dot" style="background: #ff2a5f; color: #ff2a5f;" onclick="veta.applyColor('#ff2a5f', this)"></div>
+                            <div class="color-dot" style="background: #39ff14; color: #39ff14;" onclick="veta.applyColor('#39ff14', this)"></div>
+                            <div class="color-dot" style="background: #bf00ff; color: #bf00ff;" onclick="veta.applyColor('#bf00ff', this)"></div>
+                            <div class="color-dot" style="background: #ffae00; color: #ffae00;" onclick="veta.applyColor('#ffae00', this)"></div>
                         </div>
                     </div>
-                </div>
 
-                <!-- Font Seçimi (Devasa Kütüphane) -->
-                <div class="setting-group">
-                    <div class="setting-title">Yazı Tipi Ailesi</div>
-                    <div class="options-row">
-                        <button class="opt-btn font-opt active" onclick="applyFont(this, 'Share Tech Mono')">Dijital 1</button>
-                        <button class="opt-btn font-opt" onclick="applyFont(this, 'Orbitron')">Cyberpunk</button>
-                        <button class="opt-btn font-opt" onclick="applyFont(this, 'Press Start 2P')">Retro 8-Bit</button>
-                        <button class="opt-btn font-opt" onclick="applyFont(this, 'Rajdhani')">Modern Teknoloji</button>
-                        <button class="opt-btn font-opt" onclick="applyFont(this, 'Caveat')">El Yazısı</button>
-                        <button class="opt-btn font-opt" onclick="applyFont(this, 'Roboto')">Klasik Minimal</button>
+                    <div class="setting-block">
+                        <h3>Dijital Tipografi (Yazı Tipi)</h3>
+                        <div class="scroll-row">
+                            <button class="opt-pill font-opt active" onclick="veta.applyFont('Space Grotesk', this)">Modern Sans</button>
+                            <button class="opt-pill font-opt" onclick="veta.applyFont('Share Tech Mono', this)">Mekanik Dijital</button>
+                            <button class="opt-pill font-opt" onclick="veta.applyFont('Orbitron', this)">Cyberpunk</button>
+                            <button class="opt-pill font-opt" onclick="veta.applyFont('Rajdhani', this)">Teknoloji</button>
+                            <button class="opt-pill font-opt" onclick="veta.applyFont('Caveat', this)">El Yazısı</button>
+                        </div>
                     </div>
-                </div>
 
-                <div class="setting-group">
-                    <div class="setting-title">Animasyon & Sis Efekti</div>
-                    <div class="options-row">
-                        <button class="opt-btn anim-opt active" onclick="applyAnim(this, 'anim-smooth')">Akıcı (60 FPS)</button>
-                        <button class="opt-btn anim-opt" onclick="applyAnim(this, 'anim-pulse')">Nabız (Odak)</button>
-                        <button class="opt-btn anim-opt" onclick="applyAnim(this, 'anim-tick')">Mekanik Tik-Tak</button>
-                        <button class="opt-btn anim-opt" onclick="applyAnim(this, 'anim-none')">Sisi & Hareketi Kapat</button>
+                    <div class="setting-block">
+                        <h3>Görsel Motor (Animasyon)</h3>
+                        <div class="scroll-row">
+                            <button class="opt-pill anim-opt active" onclick="veta.applyAnim('anim-smooth', this)">Akıcı (60FPS)</button>
+                            <button class="opt-pill anim-opt" onclick="veta.applyAnim('anim-tick', this)">Kuvars (Tik-Tak)</button>
+                            <button class="opt-pill anim-opt" onclick="veta.applyAnim('anim-none', this)">Performans Modu (Efektsiz)</button>
+                        </div>
                     </div>
-                </div>
 
-                <div class="setting-group">
-                    <div class="setting-title">Sayaç Düzeni</div>
-                    <div class="options-row">
-                        <button class="opt-btn layout-opt active" onclick="applyLayout(this, 'layout-classic')">Halka & Kristal</button>
-                        <button class="opt-btn layout-opt" onclick="applyLayout(this, 'layout-minimal')">Sadece Yazı</button>
-                        <button class="opt-btn layout-opt" onclick="applyLayout(this, 'layout-dashboard')">Panel Modu</button>
+                    <div class="setting-block">
+                        <h3>Temel Tema</h3>
+                        <div class="scroll-row">
+                            <button class="opt-pill theme-opt active" onclick="veta.applyTheme('dark', this)">Derin Uzay (OLED)</button>
+                            <button class="opt-pill theme-opt" onclick="veta.applyTheme('light', this)">Buz Beyazı</button>
+                        </div>
                     </div>
-                </div>
 
-                <div class="setting-group">
-                    <div class="setting-title">Arka Plan Tema</div>
-                    <div class="options-row">
-                        <button class="opt-btn bg-opt active" onclick="applyTheme(this, 'dark')">AMOLED Siyahı</button>
-                        <button class="opt-btn bg-opt" onclick="applyTheme(this, 'light')">Buz Beyazı</button>
-                    </div>
                 </div>
             </div>
         </div>
+
     </div>
 
+    <!-- ================= BOTTOM NAVIGATION ================= -->
+    <nav class="bottom-nav">
+        <div class="nav-item active" onclick="veta.nav('stopwatch', this)">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+            <span>Kronometre</span>
+        </div>
+        <div class="nav-item" onclick="veta.nav('pomodoro', this)">
+            <svg viewBox="0 0 24 24"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+            <span>Odak</span>
+        </div>
+        <div class="nav-item" onclick="veta.nav('profile', this)">
+            <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+            <span>Profil</span>
+        </div>
+    </nav>
+
     <script>
-        /* --- GAMIFICATION & XP SYSTEM --- */
-        let userLevel = parseInt(localStorage.getItem('veta_level')) || 1;
-        let userXP = parseInt(localStorage.getItem('veta_xp')) || 0;
-        
-        const Ranks = ["Çaylak Odaklanıcı", "Zaman Bükücü", "Odak Şövalyesi", "Üstat", "Efsanevi", "Kahraman (Heroic)"];
-        
-        function getXPForNextLevel(level) {
-            return level * 100; // Her seviye 100 xp artar (100, 200, 300...)
-        }
-
-        function updateXPUI() {
-            const nextLevelXP = getXPForNextLevel(userLevel);
-            document.getElementById('levelBadge').textContent = userLevel;
-            document.getElementById('xpText').textContent = `${userXP} / ${nextLevelXP} XP`;
+        /* --- VETA ENGINE v5.0 CORE ARCHITECTURE --- */
+        const veta = {
+            state: {
+                sw: { running: false, start: 0, elapsed: 0, id: null, laps: [] },
+                pm: { running: false, start: 0, total: 25*60*1000, left: 25*60*1000, id: null },
+                user: { level: 1, xp: 0 },
+                circumference: 2 * Math.PI * 140
+            },
+            ranks: ["Acemi", "Usta", "Epik", "Efsanevi", "Kahraman (Heroic)", "Yüce (High)", "Mistik"],
             
-            const progressPct = (userXP / nextLevelXP) * 100;
-            document.getElementById('xpBarFill').style.width = `${progressPct}%`;
-            
-            let rankIndex = Math.floor((userLevel - 1) / 5);
-            if(rankIndex > Ranks.length - 1) rankIndex = Ranks.length - 1;
-            document.getElementById('rankTitle').textContent = Ranks[rankIndex];
-            
-            localStorage.setItem('veta_level', userLevel);
-            localStorage.setItem('veta_xp', userXP);
-        }
-
-        function addXP(amount) {
-            userXP += amount;
-            let nextLevelXP = getXPForNextLevel(userLevel);
-            let leveledUp = false;
-
-            while (userXP >= nextLevelXP) {
-                userXP -= nextLevelXP;
-                userLevel++;
-                nextLevelXP = getXPForNextLevel(userLevel);
-                leveledUp = true;
-            }
-
-            updateXPUI();
-            
-            if (leveledUp) {
-                setTimeout(() => {
-                    alert(`Tebrikler! Seviye ${userLevel} oldunuz! Yeni unvan: ${document.getElementById('rankTitle').textContent}`);
-                    fireConfetti(true); // Seviye atlayınca özel altın konfeti
-                }, 500);
-            }
-        }
-
-        updateXPUI(); // İlk yüklemede çalıştır
-
-        /* --- VETA ENGINE v4.0 - Core Logic --- */
-        let mode = 'stopwatch';
-        let isRunning = false;
-        let startTime = 0;
-        let elapsedTime = 0;
-        let animationFrameId;
-        let lapArray = [];
-        
-        const POMODORO_WORK_TIME = 25 * 60 * 1000;
-        let pomodoroTimeLeft = POMODORO_WORK_TIME;
-
-        const timeDisplay = document.getElementById('timeDisplay');
-        const progressRing = document.getElementById('progressRing');
-        const startBtn = document.getElementById('startBtn');
-        const lapBtn = document.getElementById('lapBtn');
-        const lapList = document.getElementById('lapList');
-        const settingsOverlay = document.getElementById('settingsOverlay');
-        
-        const radius = progressRing.r.baseVal.value;
-        const circumference = 2 * Math.PI * radius;
-        progressRing.style.strokeDasharray = `${circumference} ${circumference}`;
-        progressRing.style.strokeDashoffset = circumference;
-
-        function updateEngine(timestamp) {
-            if (!isRunning) return;
-
-            let displayTime = 0;
-            let progress = 0;
-
-            if (mode === 'stopwatch') {
-                elapsedTime = performance.now() - startTime;
-                displayTime = elapsedTime;
-                progress = (displayTime % 60000) / 60000; 
-            } else {
-                const passedTime = performance.now() - startTime;
-                let currentLeft = pomodoroTimeLeft - passedTime;
+            init() {
+                // Yükleme işlemleri
+                this.loadProfile();
+                this.updateProfileUI();
                 
-                // Odak kristalinin parlaklığını kalan süreye göre artır
-                const crystal = document.querySelector('.focus-crystal');
-                if(crystal) {
-                    let intensity = 0.8 + ((POMODORO_WORK_TIME - currentLeft) / POMODORO_WORK_TIME) * 1.5;
-                    crystal.style.transform = `scale(${intensity})`;
-                }
+                document.getElementById('swRing').style.strokeDasharray = this.state.circumference;
+                document.getElementById('pmRing').style.strokeDasharray = this.state.circumference;
+                this.renderTime('sw', 0);
+                this.renderTime('pm', this.state.pm.total);
+            },
 
-                if (currentLeft <= 0) {
-                    currentLeft = 0;
-                    toggleTimer();
-                    pomodoroCompleted(); // Ödül ve XP tetikle
-                }
-                displayTime = currentLeft;
-                progress = 1 - (displayTime / POMODORO_WORK_TIME);
-            }
-
-            renderTime(displayTime);
-            progressRing.style.strokeDashoffset = circumference - (progress * circumference);
-            animationFrameId = requestAnimationFrame(updateEngine);
-        }
-
-        function renderTime(timeInMs) {
-            const date = new Date(timeInMs);
-            const minutes = String(date.getUTCMinutes()).padStart(2, '0');
-            const seconds = String(date.getUTCSeconds()).padStart(2, '0');
-            const milliseconds = String(Math.floor(date.getUTCMilliseconds() / 10)).padStart(2, '0');
-            
-            if (mode === 'pomodoro') {
-                timeDisplay.textContent = `${minutes}:${seconds}`;
-            } else {
-                timeDisplay.textContent = `${minutes}:${seconds}.${milliseconds}`;
-            }
-        }
-
-        // Haptic Feedback (Titreşim) Yardımcısı
-        function triggerVibrate(ms) {
-            if (navigator.vibrate) navigator.vibrate(ms);
-        }
-
-        function toggleTimer() {
-            triggerVibrate(30);
-            if (isRunning) {
-                isRunning = false;
-                cancelAnimationFrame(animationFrameId);
-                if (mode !== 'stopwatch') {
-                    pomodoroTimeLeft = pomodoroTimeLeft - (performance.now() - startTime);
-                }
-                startBtn.textContent = 'Başla';
-                startBtn.style.background = 'linear-gradient(135deg, #2ed573, #26ae60)';
-            } else {
-                isRunning = true;
-                startTime = performance.now();
-                if (mode === 'stopwatch') {
-                    startTime -= elapsedTime;
-                }
-                startBtn.textContent = 'Durdur';
-                startBtn.style.background = 'linear-gradient(135deg, #ff4757, #c0392b)';
-                animationFrameId = requestAnimationFrame(updateEngine);
-            }
-        }
-
-        function resetTimer() {
-            triggerVibrate(50);
-            isRunning = false;
-            cancelAnimationFrame(animationFrameId);
-            startBtn.textContent = 'Başla';
-            startBtn.style.background = 'linear-gradient(135deg, #2ed573, #26ae60)';
-            
-            if (mode === 'stopwatch') {
-                elapsedTime = 0;
-                renderTime(0);
-            } else {
-                pomodoroTimeLeft = POMODORO_WORK_TIME;
-                renderTime(pomodoroTimeLeft);
-                document.querySelector('.focus-crystal').style.transform = 'scale(0.8)';
-            }
-            progressRing.style.strokeDashoffset = circumference;
-            lapList.innerHTML = '';
-            lapArray = [];
-        }
-
-        /* Akıllı Tur İstatistik Sistemi (En Hızlı / En Yavaş) */
-        function recordLap() {
-            if (mode !== 'stopwatch') return;
-            if (!isRunning && elapsedTime === 0) return;
-            triggerVibrate([20, 30, 20]); // Özel titreşim paterni
-
-            let currentLapTime = elapsedTime;
-            let previousLapsTotal = lapArray.reduce((a, b) => a + b, 0);
-            let lapDuration = currentLapTime - previousLapsTotal;
-            
-            lapArray.push(lapDuration);
-            renderLaps();
-        }
-
-        function renderLaps() {
-            lapList.innerHTML = '';
-            
-            let minLap = Math.min(...lapArray);
-            let maxLap = Math.max(...lapArray);
-
-            for(let i = lapArray.length - 1; i >= 0; i--) {
-                const li = document.createElement('li');
-                li.className = 'lap-item';
+            /* -- NAVIGATION -- */
+            nav(pageId, element) {
+                document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+                document.getElementById(`page-${pageId}`).classList.add('active');
                 
-                let isBest = (lapArray[i] === minLap && lapArray.length > 1);
-                let isWorst = (lapArray[i] === maxLap && lapArray.length > 1);
+                document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+                element.classList.add('active');
+                this.vibrate(15);
+            },
 
-                const lapTitle = document.createElement('span');
-                lapTitle.textContent = `Tur ${i + 1}`;
-                lapTitle.style.color = "var(--text-muted)";
+            /* -- CORE ENGINE -- */
+            toggle(mode) {
+                this.vibrate(30);
+                const s = this.state[mode];
+                const btn = document.getElementById(`${mode === 'sw' ? 'sw' : 'pm'}BtnStart`);
                 
-                const lapTimeSpan = document.createElement('span');
-                const date = new Date(lapArray[i]);
-                lapTimeSpan.textContent = `${String(date.getUTCMinutes()).padStart(2, '0')}:${String(date.getUTCSeconds()).padStart(2, '0')}.${String(Math.floor(date.getUTCMilliseconds() / 10)).padStart(2, '0')}`;
-                
-                if (isBest) {
-                    lapTimeSpan.classList.add('lap-best');
-                    lapTitle.textContent += " (En Hızlı)";
-                } else if (isWorst) {
-                    lapTimeSpan.classList.add('lap-worst');
-                    lapTitle.textContent += " (En Yavaş)";
+                if (s.running) {
+                    // Durdur
+                    s.running = false;
+                    cancelAnimationFrame(s.id);
+                    if (mode === 'pm') s.left -= (performance.now() - s.start);
+                    btn.textContent = mode === 'sw' ? 'Devam' : 'Devam Et';
+                    btn.className = "btn-glass btn-start";
+                    
+                    if (mode === 'pm') document.getElementById('focusCore').style.opacity = '0';
                 } else {
-                    lapTimeSpan.style.color = "var(--text-color)";
+                    // Başlat
+                    s.running = true;
+                    s.start = performance.now();
+                    if (mode === 'sw') s.start -= s.elapsed;
+                    
+                    btn.textContent = 'Durdur';
+                    btn.className = "btn-glass btn-stop";
+                    
+                    if (mode === 'pm') document.getElementById('focusCore').style.opacity = '0.5';
+                    s.id = requestAnimationFrame((ts) => this.loop(ts, mode));
+                }
+            },
+
+            loop(timestamp, mode) {
+                const s = this.state[mode];
+                if (!s.running) return;
+
+                let displayMs = 0;
+                let progress = 0;
+
+                if (mode === 'sw') {
+                    s.elapsed = performance.now() - s.start;
+                    displayMs = s.elapsed;
+                    progress = (displayMs % 60000) / 60000;
+                } else {
+                    const passed = performance.now() - s.start;
+                    let currentLeft = s.left - passed;
+                    
+                    // Core Animation Pulse based on time left
+                    const core = document.getElementById('focusCore');
+                    let intensity = 0.3 + ((s.total - currentLeft) / s.total) * 0.7;
+                    if(core && currentLeft > 0) core.style.transform = `scale(${0.8 + intensity * 0.4})`;
+
+                    if (currentLeft <= 0) {
+                        currentLeft = 0;
+                        this.toggle('pm');
+                        this.pomodoroFinish();
+                    }
+                    displayMs = currentLeft;
+                    progress = 1 - (displayMs / s.total);
                 }
 
-                li.appendChild(lapTitle);
-                li.appendChild(lapTimeSpan);
-                lapList.appendChild(li);
-            }
-        }
+                this.renderTime(mode, displayMs);
+                document.getElementById(`${mode === 'sw' ? 'sw' : 'pm'}Ring`).style.strokeDashoffset = this.state.circumference - (progress * this.state.circumference);
+                
+                s.id = requestAnimationFrame((ts) => this.loop(ts, mode));
+            },
 
-        function setMode(newMode) {
-            if(isRunning) toggleTimer();
-            mode = newMode;
-            document.querySelectorAll('.mode-btn').forEach(btn => btn.classList.remove('active'));
-            event.target.classList.add('active');
-            
-            // Mode CSS Update
-            document.body.classList.remove('mode-stopwatch', 'mode-pomodoro');
-            document.body.classList.add(`mode-${mode}`);
-
-            if (mode === 'stopwatch') {
-                lapBtn.style.display = 'block';
-                document.getElementById('lapsContainer').style.display = 'block';
-            } else {
-                lapBtn.style.display = 'none';
-                document.getElementById('lapsContainer').style.display = 'none';
-            }
-            resetTimer();
-        }
-
-        /* --- Dopamin / Ödül Efektleri --- */
-        function pomodoroCompleted() {
-            triggerVibrate([100, 50, 100, 50, 100]); // Uzun titreşim
-            fireConfetti(false);
-            addXP(50); // 25 dakika için 50 XP
-        }
-
-        function fireConfetti(isLevelUp) {
-            var duration = isLevelUp ? 5000 : 3000;
-            var end = Date.now() + duration;
-
-            (function frame() {
-                confetti({
-                    particleCount: 5,
-                    angle: 60,
-                    spread: 55,
-                    origin: { x: 0 },
-                    colors: isLevelUp ? ['#ffd700', '#ffaa00'] : [getComputedStyle(document.documentElement).getPropertyValue('--primary-color').trim(), '#ffffff']
-                });
-                confetti({
-                    particleCount: 5,
-                    angle: 120,
-                    spread: 55,
-                    origin: { x: 1 },
-                    colors: isLevelUp ? ['#ffd700', '#ffaa00'] : [getComputedStyle(document.documentElement).getPropertyValue('--primary-color').trim(), '#ffffff']
-                });
-
-                if (Date.now() < end) {
-                    requestAnimationFrame(frame);
+            reset(mode) {
+                this.vibrate(50);
+                const s = this.state[mode];
+                s.running = false;
+                cancelAnimationFrame(s.id);
+                
+                const btn = document.getElementById(`${mode === 'sw' ? 'sw' : 'pm'}BtnStart`);
+                btn.textContent = mode === 'sw' ? 'Başla' : 'Odaklan';
+                btn.className = "btn-glass btn-start";
+                
+                if (mode === 'sw') {
+                    s.elapsed = 0;
+                    this.renderTime('sw', 0);
+                    s.laps = [];
+                    document.getElementById('lapsContainer').innerHTML = '';
+                } else {
+                    s.left = s.total;
+                    this.renderTime('pm', s.total);
+                    document.getElementById('focusCore').style.opacity = '0';
+                    document.getElementById('focusCore').style.transform = 'scale(0.8)';
                 }
-            }());
-        }
+                document.getElementById(`${mode === 'sw' ? 'sw' : 'pm'}Ring`).style.strokeDashoffset = this.state.circumference;
+            },
 
-        /* --- Ayarlar Modalı İşlemleri --- */
-        function toggleSettings() { settingsOverlay.classList.toggle('active'); triggerVibrate(15); }
-        function closeSettings(e) { if(e.target === settingsOverlay) { settingsOverlay.classList.remove('active'); } }
+            renderTime(mode, ms) {
+                const d = new Date(ms);
+                const min = String(d.getUTCMinutes()).padStart(2, '0');
+                const sec = String(d.getUTCSeconds()).padStart(2, '0');
+                const milli = String(Math.floor(d.getUTCMilliseconds() / 10)).padStart(2, '0');
+                
+                if (mode === 'sw') {
+                    document.getElementById('swTime').textContent = `${min}:${sec}`;
+                    document.getElementById('swMs').textContent = `.${milli}`;
+                } else {
+                    document.getElementById('pmTime').textContent = `${min}:${sec}`;
+                }
+            },
 
-        function applyColor(element, colorHex) {
-            document.querySelectorAll('.color-circle').forEach(el => el.classList.remove('active'));
-            if(element) element.classList.add('active');
-            document.documentElement.style.setProperty('--primary-color', colorHex);
-            document.getElementById('customColorPicker').value = colorHex;
-        }
+            /* -- LAP SYSTEM -- */
+            lap() {
+                if (!this.state.sw.running && this.state.sw.elapsed === 0) return;
+                this.vibrate([20, 30]);
+                
+                const current = this.state.sw.elapsed;
+                const prevTotal = this.state.sw.laps.reduce((a, b) => a + b, 0);
+                this.state.sw.laps.push(current - prevTotal);
+                
+                this.renderLaps();
+            },
 
-        function applyCustomColor(colorHex) {
-            document.querySelectorAll('.color-circle').forEach(el => el.classList.remove('active'));
-            document.documentElement.style.setProperty('--primary-color', colorHex);
-        }
+            renderLaps() {
+                const container = document.getElementById('lapsContainer');
+                container.innerHTML = '';
+                const arr = this.state.sw.laps;
+                if(arr.length === 0) return;
 
-        function applyTheme(element, theme) {
-            document.querySelectorAll('.bg-opt').forEach(el => el.classList.remove('active'));
-            element.classList.add('active');
-            if(theme === 'light') document.body.classList.add('light-mode');
-            else document.body.classList.remove('light-mode');
-        }
+                const minLap = Math.min(...arr);
+                const maxLap = Math.max(...arr);
 
-        function applyFont(element, fontName) {
-            document.querySelectorAll('.font-opt').forEach(el => el.classList.remove('active'));
-            element.classList.add('active');
-            
-            if(fontName === 'Press Start 2P') timeDisplay.style.fontSize = '2.2rem';
-            else timeDisplay.style.fontSize = '3.5rem';
-            
-            document.documentElement.style.setProperty('--font-family', `'${fontName}', sans-serif`);
-        }
+                for (let i = arr.length - 1; i >= 0; i--) {
+                    const div = document.createElement('div');
+                    div.className = 'lap-item';
+                    
+                    let titleText = `Tur ${i + 1}`;
+                    let isBest = (arr[i] === minLap && arr.length > 1);
+                    let isWorst = (arr[i] === maxLap && arr.length > 1);
 
-        function applyLayout(element, layoutClass) {
-            document.querySelectorAll('.layout-opt').forEach(el => el.classList.remove('active'));
-            element.classList.add('active');
-            document.body.classList.remove('layout-classic', 'layout-minimal', 'layout-dashboard');
-            document.body.classList.add(layoutClass);
-        }
+                    const titleSpan = document.createElement('span');
+                    titleSpan.className = 'lap-title';
+                    titleSpan.textContent = titleText;
+                    
+                    const timeSpan = document.createElement('span');
+                    const d = new Date(arr[i]);
+                    timeSpan.textContent = `${String(d.getUTCMinutes()).padStart(2, '0')}:${String(d.getUTCSeconds()).padStart(2, '0')}.${String(Math.floor(d.getUTCMilliseconds() / 10)).padStart(2, '0')}`;
+                    
+                    if (isBest) { timeSpan.classList.add('lap-best'); titleSpan.textContent += " (Hızlı)"; }
+                    if (isWorst) { timeSpan.classList.add('lap-worst'); titleSpan.textContent += " (Yavaş)"; }
 
-        function applyAnim(element, animClass) {
-            document.querySelectorAll('.anim-opt').forEach(el => el.classList.remove('active'));
-            element.classList.add('active');
-            document.body.classList.remove('anim-smooth', 'anim-tick', 'anim-pulse', 'anim-none');
-            document.body.classList.add(animClass);
-        }
+                    div.appendChild(titleSpan);
+                    div.appendChild(timeSpan);
+                    container.appendChild(div);
+                }
+            },
 
-        renderTime(0);
+            /* -- POMODORO SETTINGS -- */
+            setPomodoroTime(minutes, el) {
+                if(this.state.pm.running) this.reset('pm');
+                this.vibrate(15);
+                
+                document.querySelectorAll('#page-pomodoro .opt-pill').forEach(btn => btn.classList.remove('active'));
+                el.classList.add('active');
+                
+                this.state.pm.total = minutes * 60 * 1000;
+                this.reset('pm');
+            },
+
+            pomodoroFinish() {
+                this.vibrate([100, 50, 100, 50, 100]);
+                // Kazanılan XP = dakika sayısı * 2
+                const earnedXP = (this.state.pm.total / 60000) * 2;
+                this.addXP(earnedXP);
+                
+                confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 }, colors: [getComputedStyle(document.body).getPropertyValue('--primary').trim(), '#fff'] });
+            },
+
+            /* -- GAMIFICATION (PROFILE) -- */
+            loadProfile() {
+                this.state.user.level = parseInt(localStorage.getItem('veta_lvl')) || 1;
+                this.state.user.xp = parseInt(localStorage.getItem('veta_xp')) || 0;
+                
+                const savedColor = localStorage.getItem('veta_color');
+                if(savedColor) this.applyColor(savedColor, null);
+                
+                const savedFont = localStorage.getItem('veta_font');
+                if(savedFont) this.applyFont(savedFont, null);
+            },
+
+            updateProfileUI() {
+                const nextXP = this.state.user.level * 100;
+                document.getElementById('levelDisplay').textContent = this.state.user.level;
+                document.getElementById('xpText').textContent = `${Math.floor(this.state.user.xp)} / ${nextXP} XP`;
+                document.getElementById('xpFill').style.width = `${(this.state.user.xp / nextXP) * 100}%`;
+                
+                let rankIndex = Math.floor((this.state.user.level - 1) / 3);
+                if(rankIndex >= this.ranks.length) rankIndex = this.ranks.length - 1;
+                document.getElementById('rankDisplay').textContent = this.ranks[rankIndex];
+                
+                localStorage.setItem('veta_lvl', this.state.user.level);
+                localStorage.setItem('veta_xp', this.state.user.xp);
+            },
+
+            addXP(amount) {
+                this.state.user.xp += amount;
+                let nextXP = this.state.user.level * 100;
+                let leveled = false;
+                
+                while(this.state.user.xp >= nextXP) {
+                    this.state.user.xp -= nextXP;
+                    this.state.user.level++;
+                    nextXP = this.state.user.level * 100;
+                    leveled = true;
+                }
+                this.updateProfileUI();
+                
+                if(leveled) {
+                    setTimeout(() => {
+                        alert(`Seviye Atladın! Yeni Seviye: ${this.state.user.level}`);
+                        confetti({ particleCount: 200, spread: 100, colors: ['#ffd700'] });
+                    }, 500);
+                }
+            },
+
+            /* -- APPEARANCE SETTINGS -- */
+            applyColor(hex, el = null) {
+                document.documentElement.style.setProperty('--primary', hex);
+                const rgb = this.hexToRgb(hex);
+                document.documentElement.style.setProperty('--primary-glow', `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.4)`);
+                
+                document.querySelectorAll('.color-dot').forEach(d => d.classList.remove('active'));
+                if(el) el.classList.add('active');
+                
+                document.getElementById('customColor').value = hex;
+                localStorage.setItem('veta_color', hex);
+            },
+
+            applyFont(fontName, el) {
+                document.documentElement.style.setProperty('--timer-font', `'${fontName}', sans-serif`);
+                if(el) {
+                    document.querySelectorAll('.font-opt').forEach(btn => btn.classList.remove('active'));
+                    el.classList.add('active');
+                }
+                localStorage.setItem('veta_font', fontName);
+            },
+
+            applyAnim(animClass, el) {
+                document.body.classList.remove('anim-smooth', 'anim-tick', 'anim-none');
+                document.body.classList.add(animClass);
+                document.querySelectorAll('.anim-opt').forEach(btn => btn.classList.remove('active'));
+                el.classList.add('active');
+            },
+
+            applyTheme(theme, el) {
+                if(theme === 'light') document.body.classList.add('light-theme');
+                else document.body.classList.remove('light-theme');
+                
+                document.querySelectorAll('.theme-opt').forEach(btn => btn.classList.remove('active'));
+                el.classList.add('active');
+            },
+
+            /* -- UTILS -- */
+            vibrate(ms) { if (navigator.vibrate) navigator.vibrate(ms); },
+            hexToRgb(hex) {
+                const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+                return result ? { r: parseInt(result[1], 16), g: parseInt(result[2], 16), b: parseInt(result[3], 16) } : { r: 0, g: 229, b: 255 };
+            }
+        };
+
+        // Initialize Engine
+        window.onload = () => veta.init();
     </script>
 </body>
 </html>
