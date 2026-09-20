@@ -12,7 +12,7 @@
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 
     <style>
-        /* --- VETA ENGINE v5.0 - CORE VARIABLES --- */
+        /* --- VETA ENGINE v5.1 - CORE VARIABLES --- */
         :root {
             --bg-color: #050505;
             --surface-color: rgba(25, 25, 30, 0.6);
@@ -47,10 +47,13 @@
             color: var(--text-main);
             font-family: var(--ui-font);
             height: 100vh;
+            width: 100vw;
+            max-width: 100%;
             display: flex;
             flex-direction: column;
-            overflow: hidden;
+            overflow: hidden; /* Genel ekranın sağa sola/yukarı aşağı kaymasını engeller */
             transition: background-color 0.5s ease;
+            position: fixed; /* Mobil tarayıcılarda ekran sekmelerini kilitler */
         }
 
         /* --- APP ARCHITECTURE (PAGES) --- */
@@ -58,6 +61,7 @@
             flex: 1;
             position: relative;
             overflow: hidden;
+            width: 100%;
         }
 
         .page {
@@ -70,6 +74,7 @@
             transform: translateX(20px);
             transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
             padding-bottom: calc(80px + var(--safe-area-bottom));
+            overflow-x: hidden; /* Sayfanın sağa kaymasını tamamen kilitler */
         }
 
         .page.active {
@@ -128,14 +133,14 @@
             font-size: 4.5rem;
             font-weight: 700;
             letter-spacing: -1px;
-            font-variant-numeric: tabular-nums; /* Rakamların titremesini engeller */
+            font-variant-numeric: tabular-nums;
             z-index: 10;
             text-shadow: 0 4px 20px rgba(0,0,0,0.4);
         }
         
         .ms-text { font-size: 1.5rem; color: var(--text-muted); position: absolute; bottom: 60px; }
 
-        /* Odak Çekirdeği (Sadece Pomodoro'da) */
+        /* Odak Çekirdeği */
         .focus-core {
             position: absolute;
             width: 220px; height: 220px;
@@ -153,7 +158,7 @@
             100% { transform: scale(1.05); filter: blur(25px); opacity: 0.3; }
         }
 
-        /* --- CONTROLS (GLASSMORPHISM) --- */
+        /* --- CONTROLS --- */
         .controls-wrapper {
             display: flex;
             justify-content: center;
@@ -184,7 +189,10 @@
 
         /* --- LAPS & LISTS --- */
         .list-container {
-            flex: 1; overflow-y: auto; padding: 0 25px;
+            flex: 1; 
+            overflow-y: auto; 
+            overflow-x: hidden; /* Yatay kaymayı engeller */
+            padding: 0 25px;
             -webkit-overflow-scrolling: touch;
         }
         .list-container::-webkit-scrollbar { display: none; }
@@ -209,16 +217,17 @@
         .lap-best { color: #34c759; text-shadow: 0 0 10px rgba(52, 199, 89, 0.3); }
         .lap-worst { color: #ff3b30; text-shadow: 0 0 10px rgba(255, 59, 48, 0.3); }
 
-        /* --- PROFILE & SETTINGS (GAMIFICATION) --- */
+        /* --- PROFILE & SETTINGS --- */
         .profile-card {
             background: linear-gradient(145deg, var(--surface-color), rgba(0,0,0,0.5));
             border: 1px solid var(--primary-glow);
             border-radius: 24px;
             padding: 25px;
-            margin: 20px 25px;
+            margin: 20px 0; /* Boşluklar dengelendi, taşma önlendi */
             text-align: center;
             position: relative;
             overflow: hidden;
+            width: 100%;
         }
         
         .rank-title { font-family: 'Orbitron', sans-serif; font-size: 1.4rem; color: var(--primary); margin-bottom: 5px; font-weight: 700; text-shadow: 0 0 15px var(--primary-glow); }
@@ -229,29 +238,40 @@
         .xp-details { display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--text-muted); font-weight: 600; }
 
         /* Ayarlar Grid Yapısı */
-        .settings-grid { padding: 0 25px 30px; display: grid; gap: 25px; }
+        .settings-grid { padding-bottom: 30px; display: grid; gap: 25px; width: 100%; overflow-x: hidden; }
+        .setting-block { width: 100%; }
         .setting-block h3 { font-size: 0.85rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; font-weight: 600; }
         
-        .scroll-row { display: flex; gap: 12px; overflow-x: auto; padding-bottom: 5px; -webkit-overflow-scrolling: touch; }
+        .scroll-row { 
+            display: flex; gap: 12px; overflow-x: auto; padding-bottom: 10px; 
+            width: 100%; -webkit-overflow-scrolling: touch; 
+        }
         .scroll-row::-webkit-scrollbar { display: none; }
         
         .opt-pill {
             background: var(--surface-color); border: 1px solid var(--surface-border);
             color: var(--text-main); padding: 12px 20px; border-radius: 100px;
             white-space: nowrap; font-size: 0.9rem; font-weight: 500;
-            transition: all 0.2s;
+            transition: all 0.2s; cursor: pointer;
         }
         .opt-pill.active { background: var(--primary); color: #000; border-color: var(--primary); box-shadow: 0 0 15px var(--primary-glow); }
         
+        /* Renk Seçici Düzenlemeleri (Köşelerden Taşma Koruması) */
         .color-dot {
             width: 40px; height: 40px; border-radius: 50%; border: 2px solid transparent;
             flex-shrink: 0; transition: transform 0.2s; cursor: pointer;
         }
         .color-dot.active { transform: scale(1.15); border-color: var(--text-main); box-shadow: 0 0 15px currentColor; }
         
-        .custom-color { -webkit-appearance: none; width: 40px; height: 40px; border: none; border-radius: 50%; overflow: hidden; padding: 0; }
-        .custom-color::-webkit-color-swatch-wrapper { padding: 0; }
+        .custom-color { 
+            -webkit-appearance: none; appearance: none;
+            width: 40px; height: 40px; border: none; padding: 0; background: transparent;
+            border-radius: 50%; cursor: pointer;
+            clip-path: circle(50% at 50% 50%); /* Dışarı taşmayı %100 oranında bıçak gibi keser */
+        }
+        .custom-color::-webkit-color-swatch-wrapper { padding: 0; border-radius: 50%; }
         .custom-color::-webkit-color-swatch { border: none; border-radius: 50%; }
+        .custom-color::-moz-color-swatch { border: none; border-radius: 50%; } /* Firefox için */
 
         /* --- BOTTOM NAVIGATION --- */
         .bottom-nav {
@@ -276,7 +296,6 @@
         .nav-item.active { color: var(--primary); }
         .nav-item.active svg { transform: translateY(-3px); filter: drop-shadow(0 2px 5px var(--primary-glow)); }
 
-        /* Animation Options */
         body.anim-smooth .timer-progress { transition: stroke-dashoffset 0.1s linear; }
         body.anim-tick .timer-progress { transition: stroke-dashoffset 0.2s steps(1); }
         body.anim-none .timer-progress, body.anim-none .focus-core { transition: none; animation: none; opacity: 0; }
@@ -302,8 +321,8 @@
                 </div>
             </div>
             <div class="controls-wrapper">
-                <button class="btn-glass" onclick="veta.reset('stopwatch')">Sıfırla</button>
-                <button class="btn-glass btn-start" id="swBtnStart" onclick="veta.toggle('stopwatch')">Başla</button>
+                <button class="btn-glass" onclick="veta.reset('sw')">Sıfırla</button>
+                <button class="btn-glass btn-start" id="swBtnStart" onclick="veta.toggle('sw')">Başla</button>
                 <button class="btn-glass" id="swBtnLap" onclick="veta.lap()">Tur</button>
             </div>
             <div class="list-container" id="lapsContainer">
@@ -327,12 +346,11 @@
                 </div>
             </div>
             <div class="controls-wrapper">
-                <button class="btn-glass" onclick="veta.reset('pomodoro')">İptal</button>
-                <button class="btn-glass btn-start" id="pmBtnStart" onclick="veta.toggle('pomodoro')" style="width: 140px; border-radius: 100px;">Odaklan</button>
+                <button class="btn-glass" onclick="veta.reset('pm')">İptal</button>
+                <button class="btn-glass btn-start" id="pmBtnStart" onclick="veta.toggle('pm')" style="width: 140px; border-radius: 100px;">Odaklan</button>
             </div>
             
-            <!-- Pomodoro Settings Inline -->
-            <div style="padding: 0 25px; margin-top: 20px;">
+            <div style="padding: 0 25px; margin-top: 20px; width: 100%;">
                 <h3 style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 10px; text-transform: uppercase;">Seans Süresi</h3>
                 <div class="scroll-row">
                     <button class="opt-pill active" onclick="veta.setPomodoroTime(25, this)">25 Dk (Klasik)</button>
@@ -348,7 +366,6 @@
                 <h1>Profil ve Arayüz</h1>
             </div>
             <div class="list-container">
-                <!-- Gamification Card -->
                 <div class="profile-card">
                     <div class="rank-title" id="rankDisplay">Kahraman (Heroic)</div>
                     <div class="level-text">Seviye <span id="levelDisplay">1</span></div>
@@ -362,7 +379,6 @@
                     </div>
                 </div>
 
-                <!-- Settings Engine -->
                 <div class="settings-grid">
                     
                     <div class="setting-block">
@@ -428,7 +444,7 @@
     </nav>
 
     <script>
-        /* --- VETA ENGINE v5.0 CORE ARCHITECTURE --- */
+        /* --- VETA ENGINE v5.1 CORE ARCHITECTURE --- */
         const veta = {
             state: {
                 sw: { running: false, start: 0, elapsed: 0, id: null, laps: [] },
@@ -439,7 +455,6 @@
             ranks: ["Acemi", "Usta", "Epik", "Efsanevi", "Kahraman (Heroic)", "Yüce (High)", "Mistik"],
             
             init() {
-                // Yükleme işlemleri
                 this.loadProfile();
                 this.updateProfileUI();
                 
@@ -463,7 +478,7 @@
             toggle(mode) {
                 this.vibrate(30);
                 const s = this.state[mode];
-                const btn = document.getElementById(`${mode === 'sw' ? 'sw' : 'pm'}BtnStart`);
+                const btn = document.getElementById(`${mode}BtnStart`); // 'swBtnStart' veya 'pmBtnStart'
                 
                 if (s.running) {
                     // Durdur
@@ -503,7 +518,6 @@
                     const passed = performance.now() - s.start;
                     let currentLeft = s.left - passed;
                     
-                    // Core Animation Pulse based on time left
                     const core = document.getElementById('focusCore');
                     let intensity = 0.3 + ((s.total - currentLeft) / s.total) * 0.7;
                     if(core && currentLeft > 0) core.style.transform = `scale(${0.8 + intensity * 0.4})`;
@@ -518,7 +532,7 @@
                 }
 
                 this.renderTime(mode, displayMs);
-                document.getElementById(`${mode === 'sw' ? 'sw' : 'pm'}Ring`).style.strokeDashoffset = this.state.circumference - (progress * this.state.circumference);
+                document.getElementById(`${mode}Ring`).style.strokeDashoffset = this.state.circumference - (progress * this.state.circumference);
                 
                 s.id = requestAnimationFrame((ts) => this.loop(ts, mode));
             },
@@ -529,7 +543,7 @@
                 s.running = false;
                 cancelAnimationFrame(s.id);
                 
-                const btn = document.getElementById(`${mode === 'sw' ? 'sw' : 'pm'}BtnStart`);
+                const btn = document.getElementById(`${mode}BtnStart`);
                 btn.textContent = mode === 'sw' ? 'Başla' : 'Odaklan';
                 btn.className = "btn-glass btn-start";
                 
@@ -544,7 +558,7 @@
                     document.getElementById('focusCore').style.opacity = '0';
                     document.getElementById('focusCore').style.transform = 'scale(0.8)';
                 }
-                document.getElementById(`${mode === 'sw' ? 'sw' : 'pm'}Ring`).style.strokeDashoffset = this.state.circumference;
+                document.getElementById(`${mode}Ring`).style.strokeDashoffset = this.state.circumference;
             },
 
             renderTime(mode, ms) {
@@ -621,7 +635,6 @@
 
             pomodoroFinish() {
                 this.vibrate([100, 50, 100, 50, 100]);
-                // Kazanılan XP = dakika sayısı * 2
                 const earnedXP = (this.state.pm.total / 60000) * 2;
                 this.addXP(earnedXP);
                 
@@ -720,7 +733,6 @@
             }
         };
 
-        // Initialize Engine
         window.onload = () => veta.init();
     </script>
 </body>
